@@ -1,3 +1,4 @@
+"use client"
 
 import type React from "react"
 import { useEffect, useState } from "react"
@@ -5,14 +6,8 @@ import { useDispatch } from "react-redux"
 import { Link, useParams, useNavigate } from "react-router-dom"
 import { setPageTitle } from "../../../store/themeConfigSlice"
 import { Button, Switch, Select, TextInput, FileInput, Group, Text, ActionIcon, Box } from "@mantine/core"
-import { IconTrash, IconInfoCircle, IconFile, IconPhoto } from "@tabler/icons-react"
-import {
-    fetchAllADataStores,
-    fetchAllAffiliates,
-    fetchAllAccounts,
-    fetchStoreById,
-    updateStoreById,
-} from "../../../api"
+import { IconInfoCircle, IconFile, IconPhoto } from "@tabler/icons-react"
+import { fetchAllAffiliates, fetchAllAccounts, fetchStoreById, updateStoreById } from "../../../api"
 import { showMessage } from "../../common/ShowMessage"
 const VITE_BACKEND_LOCALHOST_API_URL = import.meta.env.VITE_BACKEND_API_URL
 
@@ -42,15 +37,14 @@ const EditStore = () => {
         gstCertificate: File | null
         shopPhoto: File | null
         chequePhoto: File | null
-        gstCertificateUrl?: string
-        shopPhotoUrl?: string
-        chequePhotoUrl?: string
+        gstCertificateUrl?: string | null
+        shopPhotoUrl?: string | null
+        chequePhotoUrl?: string | null
         // Track if files should be removed
         removeGstCertificate?: boolean
         removeShopPhoto?: boolean
         removeChequePhoto?: boolean
     }
-
 
     const [formData, setFormData] = useState<StoreFormData>({
         Name: "",
@@ -85,34 +79,38 @@ const EditStore = () => {
     // 👇 Fetch dropdown + existing store data
     useEffect(() => {
         if (id) {
-            const fetchFileFromUrl = async (url: any, filename: any) => {
+            const fetchFileFromUrl = async (url, filename) => {
                 try {
-                    const response = await fetch(url)
-                    const blob = await response.blob()
-                    return new File([blob], filename, { type: blob.type })
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Failed to fetch file from ${url}`);
+                    const blob = await response.blob();
+                    return new File([blob], filename, { type: blob.type });
                 } catch (err) {
-                    console.error(` Failed to fetch file from ${url}`, err)
-                    return null
+                    console.error(`Failed to fetch file from ${url}:`, err);
+                    return null;
                 }
-            }
+            };
 
             const fetchData = async () => {
                 try {
-                    const storeRes = await fetchStoreById(id)
-                    const store = storeRes.data?.data || storeRes
+                    // Fetch store data
+                    const storeRes = await fetchStoreById(id);
+                    const store = storeRes.data?.data || storeRes;
+                    console.log("Fetched store data:", store); // Debug store data
 
-                    const baseUrl = `${VITE_BACKEND_LOCALHOST_API_URL.replace("/api", "")}/uploads`
+                    const baseUrl = `${VITE_BACKEND_LOCALHOST_API_URL.replace("/api", "")}/Uploads`;
 
-                    // Create URLs
-                    const gstUrl = store.gstCertificate ? `${baseUrl}/${store.gstCertificate}` : ""
-                    const shopUrl = store.shopPhoto ? `${baseUrl}/${store.shopPhoto}` : ""
-                    const chequeUrl = store.chequePhoto ? `${baseUrl}/${store.chequePhoto}` : ""
+                    // Create URLs for files
+                    const gstUrl = store.gstCertificate ? `${baseUrl}/${store.gstCertificate}` : "";
+                    const shopUrl = store.shopPhoto ? `${baseUrl}/${store.shopPhoto}` : "";
+                    const chequeUrl = store.chequePhoto ? `${baseUrl}/${store.chequePhoto}` : "";
 
-                    // Convert to File objects
-                    const gstFile = gstUrl ? await fetchFileFromUrl(gstUrl, store.gstCertificate) : null
-                    const shopFile = shopUrl ? await fetchFileFromUrl(shopUrl, store.shopPhoto) : null
-                    const chequeFile = chequeUrl ? await fetchFileFromUrl(chequeUrl, store.chequePhoto) : null
+                    // Convert URLs to File objects
+                    const gstFile = gstUrl ? await fetchFileFromUrl(gstUrl, store.gstCertificate) : null;
+                    const shopFile = shopUrl ? await fetchFileFromUrl(shopUrl, store.shopPhoto) : null;
+                    const chequeFile = chequeUrl ? await fetchFileFromUrl(chequeUrl, store.chequePhoto) : null;
 
+                    // Set form data
                     setFormData({
                         Name: store.Name || "",
                         Address: store.Address || "",
@@ -120,68 +118,56 @@ const EditStore = () => {
                         Email: store.Email || "",
                         State: store.State || "",
                         GSTIN: store.GSTIN || "",
-                        GroupId: "",
-                        AffiliateId: typeof store.AffiliateId === "object" ? store.AffiliateId._id : store.AffiliateId || "",
-                        AccountId: typeof store.AccountId === "object" ? store.AccountId._id : store.AccountId || "",
+                        GroupId: store.GroupId?._id || store.GroupId || "",
+                        AffiliateId: store.AffiliateId?._id || store.AffiliateId || "",
+                        AccountId: store.AccountId?._id || store.AccountId || "",
                         IsActive: store.IsActive ?? true,
-                        // accountNumber: store.accountNumber || "",
-                        // ifscCode: store.ifscCode || "",
                         pinCode: store.pinCode || "",
-                        // File inputs
                         gstCertificate: gstFile,
                         shopPhoto: shopFile,
                         chequePhoto: chequeFile,
-
-                        // Still store URLs for preview if needed
                         gstCertificateUrl: gstUrl,
                         shopPhotoUrl: shopUrl,
                         chequePhotoUrl: chequeUrl,
-
-                        // Initialize removal flags
                         removeGstCertificate: false,
                         removeShopPhoto: false,
                         removeChequePhoto: false,
-                    })
-
-                    console.log(" FormData:", {
-                        GroupId: store.GroupId?._id || store.GroupId,
-                        AffiliateId: store.AffiliateId?._id || store.AffiliateId,
-                        AccountId: store.AccountId?._id || store.AccountId,
-                    })
+                    });
 
                     // Fetch dropdown options
-                    const [affiliateRes, accountRes] = await Promise.all([
-                        fetchAllAffiliates(),
-                        fetchAllAccounts(),
-                    ])
-
-                    // setGroupOptions(
-                    //     Array.isArray(groupRes.data?.data || groupRes.data) ? groupRes.data?.data || groupRes.data : [],
-                    // )
+                    const [affiliateRes, accountRes] = await Promise.all([fetchAllAffiliates(), fetchAllAccounts()]);
                     const affiliateData = affiliateRes?.data?.data || affiliateRes?.data || [];
                     const accountData = accountRes?.data?.data || accountRes?.data || [];
 
+                    // Filter active affiliates and accounts
                     const activeAffiliates = Array.isArray(affiliateData)
-                    ? affiliateData.filter((a: any) => a?.IsActive === true)
-                    : [];
-                    
-                    console.log("🚀 ~ fetchData ~ activeAffiliates:", activeAffiliates)
-                    const activeAccounts = Array.isArray(accountData)
-                        ? accountData.filter((a: any) => a?.IsActive === true)
+                        ? affiliateData.filter((a) => a.IsActive === true)
                         : [];
+                    const activeAccounts = Array.isArray(accountData)
+                        ? accountData.filter((a) => a.IsActive === true)
+                        : [];
+
+                    console.log("Active affiliates:", activeAffiliates);
+                    console.log("Active accounts:", activeAccounts);
 
                     setAffiliateOptions(activeAffiliates);
                     setAccountOptions(activeAccounts);
 
-
+                    // Check if the store's AffiliateId and AccountId exist in options
+                    if (!activeAffiliates.find((a) => a._id === (store.AffiliateId?._id || store.AffiliateId))) {
+                        console.warn(`AffiliateId ${store.AffiliateId?._id || store.AffiliateId} not found in active affiliates`);
+                    }
+                    if (!activeAccounts.find((a) => a._id === (store.AccountId?._id || store.AccountId))) {
+                        console.warn(`AccountId ${store.AccountId?._id || store.AccountId} not found in active accounts`);
+                    }
                 } catch (error) {
-                    console.error(" Error fetching store or dropdown data:", error)
+                    console.error("Error fetching store or dropdown data:", error);
                 }
-            }
+            };
 
-            fetchData()
+            fetchData();
         }
-    }, [id])
+    }, [id]);
 
     const handleChange = (field: keyof StoreFormData, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
@@ -215,7 +201,7 @@ const EditStore = () => {
                 removeShopPhoto: formData.removeShopPhoto,
                 removeChequePhoto: formData.removeChequePhoto,
             }
-            const token = localStorage.getItem("authToken");
+            const token = localStorage.getItem("authToken")
 
             const response = await updateStoreById(id!, submissionData, token)
             // console.log("✅ Store updated:", response)
@@ -234,24 +220,55 @@ const EditStore = () => {
         ? groupOptions
         : [...groupOptions, { _id: formData.GroupId, GroupId: "Unknown Group" }]
 
-    // Normalize AffiliateId
-    const affiliateExists = affiliateOptions.find((a) => a._id === formData.AffiliateId)
-    const normalizedAffiliateOptions = affiliateExists
-        ? affiliateOptions
-        : [...affiliateOptions, { _id: formData.AffiliateId, AffiliateId: "Unknown Affiliate" }]
+    // Replace the existing normalizedAffiliateOptions code with:
 
-    // Normalize AccountId
-    const accountExists = accountOptions.find((a) => a._id === formData.AccountId)
-    const normalizedAccountOptions = accountExists
-        ? accountOptions
-        : [...accountOptions, { _id: formData.AccountId, AccountId: "Unknown Account" }]
+    // For affiliates - don't add "Unknown Affiliate" to the dropdown
+    // Normalize AffiliateId and AccountId options
+    // Normalize AffiliateId and AccountId options
+    // Normalize AffiliateId and AccountId options
+    const normalizedAffiliateOptions = affiliateOptions.some((a) => a._id === formData.AffiliateId)
+        ? affiliateOptions // If AffiliateId exists, use original options
+        : [
+            ...affiliateOptions,
+            ...(formData.AffiliateId
+                ? [
+                    {
+                        _id: formData.AffiliateId,
+                        AffiliateId: `AFID_${formData.AffiliateId}`, // Fallback label
+                        IsActive: false, // Mark as inactive
+                    },
+                ]
+                : []),
+        ].filter(
+            (v, i, a) => a.findIndex((t) => t._id === v._id) === i // Remove duplicates by _id
+        );
 
+    const normalizedAccountOptions = accountOptions.some((a) => a._id === formData.AccountId)
+        ? accountOptions // If AccountId exists, use original options
+        : [
+            ...accountOptions,
+            ...(formData.AccountId
+                ? [
+                    {
+                        _id: formData.AccountId,
+                        AccountId: `ACID_${formData.AccountId}`, // Fallback label
+                        IsActive: false, // Mark as inactive
+                    },
+                ]
+                : []),
+        ].filter(
+            (v, i, a) => a.findIndex((t) => t._id === v._id) === i // Remove duplicates by _id
+        );
+    console.log("Affiliate options:", affiliateOptions);
+    console.log("Account options:", accountOptions);
+    console.log("Normalized affiliate options:", normalizedAffiliateOptions);
+    console.log("Normalized account options:", normalizedAccountOptions);
     type FilePreviewProps = {
-        file: File | null;
-        url: string;
-        fileType?: string;  // optional
-        label?: string;     // optional
-    };
+        file: File | null
+        url: string
+        fileType?: string // optional
+        label?: string // optional
+    }
     // Custom file input value display component
     const FilePreview: React.FC<FilePreviewProps> = ({ file, url, fileType, label }) => {
         if (!file && !url) return null
@@ -366,12 +383,7 @@ const EditStore = () => {
                         onChange={(e) => handleChange("ifscCode", e.target.value)}
                     /> */}
 
-                    <input
-                        type="hidden"
-                        name="GroupId"
-                        value={formData.GroupId}
-                    />
-
+                    <input type="hidden" name="GroupId" value={formData.GroupId} />
 
                     <Select
                         label="Affiliate"
@@ -379,8 +391,8 @@ const EditStore = () => {
                         value={formData.AffiliateId}
                         onChange={(value) => handleChange("AffiliateId", value!)}
                         data={normalizedAffiliateOptions.map((affiliate) => ({
-                            value: affiliate._id, // Use _id
-                            label: `AFID_${affiliate._id}`, //  Show AffiliateId
+                            value: affiliate._id, // Use _id as the value
+                            label: affiliate.AffiliateId || `AFID_${affiliate._id}`, // Display AffiliateId
                         }))}
                     />
 
@@ -390,8 +402,8 @@ const EditStore = () => {
                         value={formData.AccountId}
                         onChange={(value) => handleChange("AccountId", value!)}
                         data={normalizedAccountOptions.map((account) => ({
-                            value: account._id, // Must match formData.AccountId
-                            label: `ACID_${account._id}`, // Display something like "ACCID_hgbhwj"
+                            value: account._id, // Use _id as the value
+                            label: account.AccountId || `ACID_${account._id}`, // Display AccountId
                         }))}
                     />
 

@@ -154,7 +154,6 @@ export const createAffiliate = async (payload: any, token: string | null) => {
     }
 };
 
-
 //create group
 export const createStoreGroup = async (payload: any) => {
     try {
