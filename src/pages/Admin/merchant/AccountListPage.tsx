@@ -3,6 +3,7 @@ import { DataTable, DataTableSortStatus } from 'mantine-datatable';
 import { Link } from 'react-router-dom';
 import IconPlus from '../../../components/Icon/IconPlus';
 import { fetchAllAccounts } from '../../../api';
+
 type Account = {
     _id: string;
     AccountName: string;
@@ -48,7 +49,7 @@ const AccountListPage: React.FC = () => {
     }, []);
 
     const columns: Column[] = [
-        { accessor: 'AccountId', title: 'Account ID', sortable: true },
+        { accessor: '_id', title: 'Account ID', sortable: true },
 
         { accessor: 'AccountName', title: 'Account Name', sortable: true },
         { accessor: 'AccountNumber', title: 'Account Number', sortable: true },

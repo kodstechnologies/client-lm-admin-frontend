@@ -69,8 +69,8 @@ const CreateStore = () => {
   });
 
   const [groupOptions, setGroupOptions] = useState<{ _id: string; GroupId: string }[]>([]);
-  const [affiliateOptions, setAffiliateOptions] = useState<{ _id: string; AffiliateId: string }[]>([]);
-  const [accountOptions, setAccountOptions] = useState<{ _id: string; AccountId: string }[]>([]);
+  const [affiliateOptions, setAffiliateOptions] = useState<{ _id: string; AffiliateId: string, Name: string }[]>([]);
+  const [accountOptions, setAccountOptions] = useState<{ _id: string; AccountId: string, AccountName: string }[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [merchantOptions, setMerchantOptions] = useState<{ _id: string; }[]>([]); // new state
   const [errorMsg, setErrorMsg] = useState('');
@@ -98,6 +98,7 @@ const CreateStore = () => {
         // Filter only IsActive === true
         const activeAffiliates = affiliateRes.data.data.filter((affiliate: { IsActive: boolean }) => affiliate.IsActive);
         const activeAccounts = accountRes.data.data.filter((account: { IsActive: boolean }) => account.IsActive);
+        console.log("🚀 ~ fetchDropdownOptions ~ activeAffiliates:", activeAffiliates)
 
         setAffiliateOptions(activeAffiliates);
         setAccountOptions(activeAccounts);
@@ -150,11 +151,6 @@ const CreateStore = () => {
       [key]: value,
     }));
   };
-
-
-  {
-
-  }
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -272,8 +268,8 @@ const CreateStore = () => {
             value={formData.AffiliateId}
             onChange={(value) => handleChange('AffiliateId', value!)}
             data={affiliateOptions.map((affiliate) => ({
-              value: affiliate.AffiliateId,
-              label: affiliate.AffiliateId
+              value: affiliate._id,
+              label: affiliate.Name // ✅ uses name now
             }))}
           />
 
@@ -284,10 +280,11 @@ const CreateStore = () => {
             value={formData.AccountId}
             onChange={(value) => handleChange('AccountId', value!)}
             data={accountOptions.map((account) => ({
-              value: account.AccountId,
-              label: account.AccountId
+              value: account._id,
+              label: account.AccountName // ✅ uses account name now
             }))}
           />
+
           {/* <TextInput label="Account Number" type="text" value={formData.accountNumber} onChange={(e) => handleChange('accountNumber', e.target.value)} />
           <TextInput label="IFSC Code" value={formData.ifscCode} onChange={(e) => handleChange('ifscCode', e.target.value.toUpperCase())} /> */}
 

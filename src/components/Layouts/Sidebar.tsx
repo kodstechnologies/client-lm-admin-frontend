@@ -99,9 +99,9 @@ const Sidebar = () => {
                                                     <NavLink to="/admin/merchants">{t('All Merchants')}</NavLink>
                                                 </li>
 
-                                                <li>
+                                                {/* <li>
                                                     <NavLink to="/admin/merchant-approval">{t('Approval Requests')}</NavLink>
-                                                </li>
+                                                </li> */}
 
                                              
                                             </ul>
@@ -123,12 +123,12 @@ const Sidebar = () => {
                                         <AnimateHeight duration={300} height={currentMenu === 'store' ? 'auto' : 0}>
                                             <ul className="sub-menu text-gray-500">
                                                 <li>
-                                                    <NavLink to="/admin/merchants-store">{t('All Merchants')}</NavLink>
+                                                    <NavLink to="/admin/merchants-store">{t('Store Group')}</NavLink>
                                                 </li>
 
-                                                <li>
+                                                {/* <li>
                                                     <NavLink to="/admin/merchant-approval">{t('Approval Requests')}</NavLink>
-                                                </li>
+                                                </li> */}
 
                                                 {/* <li>
                                                     <NavLink to="/admin/merchant-store-group">{t('Store Group')}</NavLink>

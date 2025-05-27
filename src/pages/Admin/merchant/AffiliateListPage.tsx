@@ -47,7 +47,7 @@ const AffiliateListPage: React.FC = () => {
     }, []);
 
     const columns: Column[] = [
-        { accessor: 'AffiliateId', title: 'Affiliate ID', sortable: true },
+        { accessor: '_id', title: 'Affiliate ID', sortable: true },
 
         { accessor: 'Name', title: 'Affiliate Name', sortable: true },
         { accessor: 'Phone', title: 'Phone', sortable: true },

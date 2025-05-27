@@ -9,7 +9,7 @@ const columns = [
         accessor: 'id',
         title: 'Group ID',
         sortable: true,
-        render: (row: any) => `GRID_${row.merchantId}`,
+        render: (row: any) => `${row.merchantId}`,
     },
     { accessor: 'storeBrand', title: 'STORE BRAND', sortable: true },
     { accessor: 'countOfStores', title: 'COUNT OF STORES', sortable: true },

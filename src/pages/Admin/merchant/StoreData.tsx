@@ -18,13 +18,10 @@ const columns = [
         },
     },
     {
-        accessor: 'storeId',
+        accessor: 'StoreCode',
         title: 'STORE ID',
         sortable: false,
-        render: (row: any, index: number) => {
-            const startingNumber = 1001;
-            return <>LMS_{startingNumber + index}</>;
-        },
+
     },
     { accessor: 'Name', title: 'STORE NAME', sortable: true },
 
@@ -41,14 +38,15 @@ const columns = [
 
     // Render GroupId as hyperlink
     {
-        accessor: 'GroupId',
+        accessor: 'ChainStoreId',
         title: 'GroupId',
         sortable: true,
-        render: (row: any) => (
-            <Link to={`/admin/merchant-store-group`} className="text-blue-600">
-                {row.MerchantId}
-            </Link>
-        ),
+        // render: (row: any) => (
+        //     <Link to={`/admin/merchant-store-group`} className="text-blue-600">
+        //         {row.MerchantId}
+        //     </Link>
+        // ),
+
     },
 
     // Render AffiliateId as hyperlink

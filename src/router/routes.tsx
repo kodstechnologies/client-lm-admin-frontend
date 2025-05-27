@@ -152,14 +152,14 @@ const routes = [
             </AdminProtected>
         ),
     },
-    {
-        path: '/admin/create-merchant-store-group',
-        element: (
-            <AdminProtected>
-                <StoreGroupForm />
-            </AdminProtected>
-        ),
-    },
+    // {
+    //     path: '/admin/create-merchant-store-group',
+    //     element: (
+    //         <AdminProtected>
+    //             <StoreGroupForm />
+    //         </AdminProtected>
+    //     ),
+    // },
     {
         path: '/admin/merchant-affiliate',
         element: (

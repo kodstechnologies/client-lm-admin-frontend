@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { TextInput, Textarea, Button, Switch } from '@mantine/core';
 import { createAccount } from '../../../api';
+import { useNavigate } from 'react-router-dom';
+import { showMessage } from '../../../components/common/ShowMessage';
 
 type AccountFormType = {
     AccountName: string;
@@ -24,13 +26,14 @@ const AccountForm: React.FC = () => {
     const handleChange = (field: string, value: string | boolean) => {
         setAccount((prev) => ({ ...prev, [field]: value }));
     };
+    const navigate = useNavigate()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem("authToken");
 
-            const response = await createAccount(account,token);
+            const response = await createAccount(account, token);
             console.log('Account Created:', response);
             setAccount({
                 AccountName: '',
@@ -40,6 +43,8 @@ const AccountForm: React.FC = () => {
                 IsActive: true,
 
             });
+            showMessage('Account created successfully')
+            navigate('/admin/merchant-account')
         } catch (error: any) {
             console.error(error.message);
             // Optionally show error message

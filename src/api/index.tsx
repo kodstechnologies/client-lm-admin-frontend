@@ -164,21 +164,10 @@ export const createStoreGroup = async (payload: any) => {
     }
 };
 
-//create chain store
-// export const createChainStore = async (payload: any) => {
-//     try {
-//         const res = await api.post('/create-chain-store', payload)
-//         return res.data;
-//     } catch (error: any) {
-//         console.error('API Error:', error.response?.data || error.message);
-//         throw error;
-
-//     }
-// }
 
 
 //2.STORE MANAGEMENT
-//create store by merchantid
+//create store by merchantid|| store by chain store
 export const createStoreByMerchantId = async (merchantId: string, payload: FormData, token: string | null) => {
     try {
         console.log("🚀 ~ createStoreByMerchantId ~ token:", token)
@@ -206,7 +195,7 @@ export const createStoreByMerchantId = async (merchantId: string, payload: FormD
         };
     }
 };
-
+//by chain store
 
 export const fetchStoresByMerchantId = async (merchantId: string) => {
     try {
@@ -229,6 +218,7 @@ export const fetchAllStores = async () => {
     }
 }
 
+//create chain store
 export const createMerchantApi = async (payload: any) => {
     try {
         const res = await api.post('/create-merchant', payload);
@@ -244,7 +234,7 @@ export const createMerchantApi = async (payload: any) => {
         };
     }
 };
-
+//fetch all chain stores
 export const fetchAllMerchants = async () => {
     try {
         const res = await api.get('/get-all-merchants')
@@ -355,6 +345,8 @@ export const updateStoreById = async (
     }
 };
 
+
+//remove both
 export const updateStoreGroup = async (id: any, data: any) => {
     try {
         const response = await api.put(`/edit-store-groups/${id}`, data);

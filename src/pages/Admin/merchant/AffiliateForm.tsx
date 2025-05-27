@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { TextInput, Textarea, Button, Switch } from '@mantine/core';
 import { createAffiliate } from '../../../api'; //  Import your API method
+import { showMessage } from '../../../components/common/ShowMessage';
+import { useNavigate } from 'react-router-dom';
 
 type AffiliateFormType = {
     Name: string;
@@ -24,6 +26,7 @@ const AffiliateForm: React.FC = () => {
     const handleChange = (field: keyof AffiliateFormType, value: string | boolean) => {
         setAffiliate((prev) => ({ ...prev, [field]: value }));
     };
+const navigate = useNavigate()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,6 +43,8 @@ const AffiliateForm: React.FC = () => {
                 IsActive: true,
 
             });
+            showMessage('Affiliate created successfully')
+            navigate('/admin/merchant-affiliate')
         } catch (error: any) {
             console.error('Error creating affiliate:', error.message);
         }
