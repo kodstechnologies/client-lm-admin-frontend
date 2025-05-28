@@ -8,13 +8,12 @@ import { Button, Switch, Select, TextInput, FileInput, Group, Text, ActionIcon, 
 import { IconInfoCircle, IconFile, IconPhoto } from "@tabler/icons-react"
 import { fetchAllAffiliates, fetchAllAccounts, fetchStoreById, updateStoreById } from "../../../api"
 import { showMessage } from "../../common/ShowMessage"
+import { FaSpinner } from "react-icons/fa"
 const VITE_BACKEND_LOCALHOST_API_URL = import.meta.env.VITE_BACKEND_API_URL
 
 const EditStore = () => {
   const dispatch = useDispatch()
   const { id } = useParams() //capture store ID from route param
-  console.log("🚀 ~ EditStore ~ storeId:", id)
-
   useEffect(() => {
     dispatch(setPageTitle("Edit Store"))
   }, [dispatch])
@@ -69,6 +68,8 @@ const EditStore = () => {
   // After setting formData, find the selected affiliate and account names
   const [selectedAffiliateName, setSelectedAffiliateName] = useState<string>("")
   const [selectedAccountName, setSelectedAccountName] = useState<string>("")
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
+  const [loading, setLoading] = useState(false);
 
   const [groupOptions, setGroupOptions] = useState<{ _id: string; GroupId: string }[]>([])
   const [affiliateOptions, setAffiliateOptions] = useState<{ _id: string; AffiliateId: string; Name?: string }[]>([])
@@ -193,10 +194,47 @@ const EditStore = () => {
       [urlField]: "",
     }))
   }
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {}
+
+    if (!formData.Name.trim()) errors.Name = "Store Name is required"
+    if (!formData.Address.trim()) errors.Address = "Address is required"
+    if (!formData.Phone.trim()) {
+      errors.Phone = "Phone number is required"
+    } else if (!/^\d{10}$/.test(formData.Phone)) {
+      errors.Phone = "Phone must be 10 digits"
+    }
+
+    if (!formData.Email.trim()) {
+      errors.Email = "Email is required"
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.Email)) {
+      errors.Email = "Invalid email format"
+    }
+
+    if (!formData.State.trim()) errors.State = "State is required"
+    if (!formData.GSTIN.trim()) errors.GSTIN = "GSTIN is required"
+    if (!formData.pinCode.trim()) errors.pinCode = "Pin Code is required"
+    if (!formData.AffiliateId) errors.AffiliateId = "Affiliate selection is required"
+    if (!formData.AccountId) errors.AccountId = "Account selection is required"
+
+    return errors
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const errors = validateForm()
+    console.log("Validation errors:", errors)
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    } else {
+      setFormErrors({})
+    }
+    setLoading(true); // Start loading
+
     try {
+
       // Prepare submission data with file removal flags
       const submissionData = {
         ...formData,
@@ -217,6 +255,8 @@ const EditStore = () => {
       navigate("/admin/merchants-store")
     } catch (error) {
       console.error("Error updating store:", error)
+    } finally {
+      setLoading(false); // Stop loading
     }
   }
 
@@ -262,7 +302,13 @@ const EditStore = () => {
       </Box>
     )
   }
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <FaSpinner className="animate-spin text-4xl text-gray-600" />
+      </div>
+    );
+  }
   return (
     <>
       <ul className="flex space-x-2 rtl:space-x-reverse">
@@ -302,43 +348,65 @@ const EditStore = () => {
             required
             value={formData.Name}
             onChange={(e) => handleChange("Name", e.target.value)}
+            error={formErrors.Name}
+
           />
           <TextInput
             label="Phone"
+            placeholder="Phone"
+            type="text"
             required
             value={formData.Phone}
-            onChange={(e) => handleChange("Phone", e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Allow only digits and max length 10
+              if (/^\d{0,10}$/.test(val)) {
+                handleChange("Phone", val);
+              }
+            }}
+            error={formErrors.Phone}
           />
+
+
           <TextInput
             label="Email"
             required
             type="email"
             value={formData.Email}
             onChange={(e) => handleChange("Email", e.target.value)}
+            error={formErrors.Email}
+
           />
           <TextInput
             label="State"
             required
             value={formData.State}
             onChange={(e) => handleChange("State", e.target.value)}
+            error={formErrors.State}
+
           />
           <TextInput
             label="Address"
             required
             value={formData.Address}
             onChange={(e) => handleChange("Address", e.target.value)}
+            error={formErrors.Address}
+
           />
           <TextInput
             label="Pin Code"
             type="number"
             value={formData.pinCode}
             onChange={(e) => handleChange("pinCode", e.target.value)}
+            error={formErrors.pinCode}
+
           />
           <TextInput
             label="GSTIN"
             required
             value={formData.GSTIN}
             onChange={(e) => handleChange("GSTIN", e.target.value)}
+            error={formErrors.pinCode}
           />
 
           <input type="hidden" name="GroupId" value={formData.GroupId} />
@@ -458,8 +526,9 @@ const EditStore = () => {
         </div>
 
         <div className="flex justify-center mt-6">
-          <Button type="submit" className="btn btn-primary gap-2">
-            Update
+          <Button type="submit" disabled={loading}>
+            {loading ? <FaSpinner size="sm" /> : "Submit"}
+
           </Button>
         </div>
       </form>

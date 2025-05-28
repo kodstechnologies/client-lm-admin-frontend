@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { setPageTitle } from '../../../store/themeConfigSlice';
 import { Button, TextInput, Switch } from '@mantine/core';
 import { createMerchantApi } from '../../../api';
 import { showMessage } from '../../common/ShowMessage';
+import { FaSpinner } from 'react-icons/fa';
 
 const createMerchant = () => {
     const dispatch = useDispatch();
@@ -41,6 +42,9 @@ const createMerchant = () => {
         IsActive: true,
     });
     const [errorMsg, setErrorMsg] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const navigate = useNavigate()
 
     const handleChange = (field: keyof MerchantFormData, value: string | boolean) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -48,8 +52,12 @@ const createMerchant = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setLoading(true); // Start loading
+
         try {
-            const res = await createMerchantApi(formData); // Your POST API call
+            const token = localStorage.getItem("authToken");
+
+            const res = await createMerchantApi(formData, token); // Your POST API call
             console.log('Merchant created:', res);
             setFormData({
                 Name: '',
@@ -66,6 +74,7 @@ const createMerchant = () => {
             });
             showMessage('Merchant created successfully')
             setErrorMsg('');
+            navigate("/admin/merchants-store")
 
         } catch (err: any) {
             if (err.status === 409) {
@@ -73,9 +82,17 @@ const createMerchant = () => {
             } else {
                 setErrorMsg('An unexpected error occurred');
             }
+        } finally {
+            setLoading(false); // Stop loading
         }
     };
-
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <FaSpinner className="animate-spin text-4xl text-gray-600" />
+            </div>
+        );
+    }
     return (
         <>
             <ul className="flex space-x-2 rtl:space-x-reverse">
@@ -111,7 +128,8 @@ const createMerchant = () => {
                         }}
                     />
 
-                    <TextInput label="Phone" placeholder='Enter phone number' required value={formData.Phone} onChange={(e) => handleChange('Phone', e.target.value)} />
+                    <TextInput label="Phone" placeholder='Enter phone number' required type="tel"
+                        maxLength={10} value={formData.Phone} onChange={(e) => handleChange('Phone', e.target.value.replace(/\D/g, ''))} />
                     <TextInput label="Email" placeholder='Enter email' required type="email" value={formData.Email} onChange={(e) => handleChange('Email', e.target.value)} />
                     <TextInput
                         label="Description"
@@ -139,7 +157,10 @@ const createMerchant = () => {
                 </div>
 
                 <div className="flex justify-center mt-6">
-                    <Button type="submit">Create Merchant</Button>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? <FaSpinner size="sm" /> : "Submit"}
+                    </Button>
+
                 </div>
             </form>
         </>

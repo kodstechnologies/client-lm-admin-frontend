@@ -21,6 +21,7 @@ import {
   fetchAllMerchants
 
 } from '../../../api';
+import { FaSpinner } from 'react-icons/fa';
 
 const CreateStore = () => {
   const dispatch = useDispatch();
@@ -74,6 +75,8 @@ const CreateStore = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [merchantOptions, setMerchantOptions] = useState<{ _id: string; }[]>([]); // new state
   const [errorMsg, setErrorMsg] = useState('');
+  const [errors, setErrors] = useState<{ Phone?: string }>({});
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate()
 
@@ -152,9 +155,22 @@ const CreateStore = () => {
     }));
   };
 
-
+  const handleBlur = (key: string) => {
+    if (key === 'Phone') {
+      const value = formData.Phone;
+      if (value.length < 10) {
+        setErrors((prev) => ({
+          ...prev,
+          Phone: 'Phone number must be exactly 10 digits',
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, Phone: undefined }));
+      }
+    }
+  };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true); // Start loading
 
     try {
       const submissionData = new FormData();
@@ -219,10 +235,18 @@ const CreateStore = () => {
       // else {
       //   setErrorMsg('An unexpected error occurred');
       // }
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
-
+  if (loading) if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <FaSpinner className="animate-spin text-4xl text-gray-600" />
+      </div>
+    );
+  } <div>  <FaSpinner /></div>;
   return (
     <>
       <ul className="flex space-x-2 rtl:space-x-reverse">
@@ -244,7 +268,17 @@ const CreateStore = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 panel p-6">
 
           <TextInput label="Name" placeholder='Enter store name ' required value={formData.Name} onChange={(e) => handleChange('Name', e.target.value)} />
-          <TextInput label="Phone" placeholder='Enter phone number ' type="text" required value={formData.Phone} onChange={(e) => handleChange('Phone', e.target.value)} />
+          <TextInput
+            label="Phone"
+            placeholder="Enter phone number"
+            type="text"
+            required
+            value={formData.Phone}
+            onChange={(e) => handleChange('Phone', e.target.value)}
+            onBlur={() => handleBlur('Phone')}
+            error={errors.Phone}
+          />
+
           <TextInput label="Email" placeholder='Enter email' required type="email" value={formData.Email} onChange={(e) => handleChange('Email', e.target.value)} />
           <TextInput label="State" placeholder='Enter state' required value={formData.State} onChange={(e) => handleChange('State', e.target.value)} />
           <TextInput label="Address" placeholder='Enter store address' required value={formData.Address} onChange={(e) => handleChange('Address', e.target.value)} />
@@ -328,7 +362,9 @@ const CreateStore = () => {
         </div>
 
         <div className="flex justify-center mt-6">
-          <Button type="submit" className="btn btn-primary gap-2">Submit</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? <FaSpinner size="sm" /> : "Submit"}
+          </Button>
         </div>
       </form>
     </>

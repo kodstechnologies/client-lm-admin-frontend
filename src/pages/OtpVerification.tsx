@@ -189,7 +189,7 @@ const OtpVerification = () => {
                                 <>
                                     <div>
                                         <label htmlFor="otp">OTP</label>
-                                        <div className="flex gap-2 justify-evenly">
+                                        <div className="flex gap-1 justify-center">
                                             {[0, 1, 2, 3, 4, 5].map((index) => {
                                                 const key = `otp${index}` as keyof FormValues
                                                 return (

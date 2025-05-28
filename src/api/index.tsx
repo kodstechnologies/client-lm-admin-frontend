@@ -117,7 +117,6 @@ export const createAccount = async (payload: any, token: string | null) => {
         const response = await api.post('/create-account', payload, {
 
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`, // Add this
             }
         }); // adjust URL if needed
@@ -219,9 +218,15 @@ export const fetchAllStores = async () => {
 }
 
 //create chain store
-export const createMerchantApi = async (payload: any) => {
+export const createMerchantApi = async (payload: any, token: string | null) => {
+    console.log("🚀 ~ createMerchantApi ~ token:", token)
     try {
-        const res = await api.post('/create-merchant', payload);
+        const res = await api.post('/create-merchant', payload, {
+
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add this
+            }
+        });
         return res.data;
     } catch (error: any) {
         console.error('API Error:', error.response?.data || error.message);
@@ -388,18 +393,31 @@ export const getAccountById = async (id: string) => {
 };
 
 
-export const updateAffiliate = async (id: string, affiliateData: any) => {
+export const updateAffiliate = async (id: string, affiliateData: any, token: string | null) => {
     try {
-        const response = await api.put(`/edit-affiliates/${id}`, affiliateData);
+        const response = await api.put(`/edit-affiliates/${id}`, affiliateData, {
+
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add this
+            }
+        });
+        console.log("🚀 ~ updateAffiliate ~ token:", token)
+
         return response.data;
     } catch (error: any) {
         console.error('Error updating affiliate:', error.response?.data || error.message);
         throw error;
     }
 };
-export const updateAccount = async (id: string, accountData: any) => {
+export const updateAccount = async (id: string, accountData: any, token: string | null) => {
     try {
-        const response = await api.put(`/edit-accounts/${id}`, accountData);
+        const response = await api.put(`/edit-accounts/${id}`, accountData, {
+
+            headers: {
+                'Authorization': `Bearer ${token}`, // Add this
+            }
+        });
+        console.log("🚀 ~ updateAccount ~ token:", token)
         return response.data;
     } catch (error: any) {
         console.error('Error updating account:', error.response?.data || error.message);
