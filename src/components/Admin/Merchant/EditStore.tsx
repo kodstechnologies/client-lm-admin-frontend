@@ -81,17 +81,17 @@ const EditStore = () => {
   // 👇 Fetch dropdown + existing store data
   useEffect(() => {
     if (id) {
-      const fetchFileFromUrl = async (url, filename) => {
+      const fetchFileFromUrl = async (url: string, filename: string): Promise<File | null> => {
         try {
-          const response = await fetch(url)
-          if (!response.ok) throw new Error(`Failed to fetch file from ${url}`)
-          const blob = await response.blob()
-          return new File([blob], filename, { type: blob.type })
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`Failed to fetch file from ${url}`);
+          const blob = await response.blob();
+          return new File([blob], filename, { type: blob.type });
         } catch (err) {
-          console.error(`Failed to fetch file from ${url}:`, err)
-          return null
+          console.error(`Failed to fetch file from ${url}:`, err);
+          return null;
         }
-      }
+      };
 
       const fetchData = async () => {
         try {
@@ -457,7 +457,7 @@ const EditStore = () => {
             {!formData.removeGstCertificate && (
               <FilePreview
                 file={formData.gstCertificate}
-                url={formData.gstCertificateUrl}
+                url={formData.gstCertificateUrl || ''}
                 fileType="gstCertificate"
                 label="GST Certificate"
               />
@@ -479,7 +479,7 @@ const EditStore = () => {
             {!formData.removeShopPhoto && (
               <FilePreview
                 file={formData.shopPhoto}
-                url={formData.shopPhotoUrl}
+                url={formData.shopPhotoUrl||''}
                 fileType="shopPhoto"
                 label="Shop Photo"
               />
@@ -501,7 +501,7 @@ const EditStore = () => {
             {!formData.removeChequePhoto && (
               <FilePreview
                 file={formData.chequePhoto}
-                url={formData.chequePhotoUrl}
+                url={formData.chequePhotoUrl||''}
                 fileType="chequePhoto"
                 label="Cancelled Cheque"
               />

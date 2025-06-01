@@ -145,7 +145,9 @@ const StoreData = () => {
 
             try {
                 setLoading(true);
-                const response = await uploadStore(formData, id);
+                const token = localStorage.getItem("authToken")
+
+                const response = await uploadStore(formData, id, token);
                 console.log("Upload response:", response);
                 await fetchStores();
                 showMessage("Store data uploaded successfully.");
