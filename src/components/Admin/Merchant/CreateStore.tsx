@@ -267,7 +267,7 @@ const CreateStore = () => {
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 panel p-6">
 
-          <TextInput label="Name" placeholder='Enter store name ' required value={formData.Name} onChange={(e) => handleChange('Name', e.target.value)} />
+          <TextInput label="Store Name" placeholder='Enter store name ' required value={formData.Name} onChange={(e) => handleChange('Name', e.target.value)} />
           <TextInput
             label="Phone"
             placeholder="Enter phone number"
