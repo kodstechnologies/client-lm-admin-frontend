@@ -55,7 +55,7 @@ const columns = [
         title: 'AffiliateId',
         sortable: true,
         render: (row: any) => (
-            <Link to={`/admin/merchant-affiliate`} className="text-blue-600 ">
+            <Link to={`/admin/edit-merchant-affiliate/${row.AffiliateId}`} className="text-blue-600 ">
                 {row.AffiliateId}
             </Link>
         ),
@@ -67,7 +67,7 @@ const columns = [
         title: 'AccountId',
         sortable: true,
         render: (row: any) => (
-            <Link to={`/admin/merchant-account`} className="text-blue-600">
+            <Link to={`/admin/edit-merchant-account/${row.AccountId}`} className="text-blue-600">
                 {row.AccountId}
             </Link>
         ),
