@@ -26,7 +26,7 @@ import { FaSpinner } from 'react-icons/fa';
 const CreateStore = () => {
   const dispatch = useDispatch();
   const { id: merchantId } = useParams();
-  console.log("🚀 ~ CreateStore ~ merchantId:", merchantId)
+  // console.log("🚀 ~ CreateStore ~ merchantId:", merchantId)
   useEffect(() => {
     dispatch(setPageTitle('Create Store'));
   }, [dispatch]);
@@ -86,22 +86,22 @@ const CreateStore = () => {
     const fetchDropdownOptions = async () => {
       try {
         const merchantRes = await fetchAllMerchants();
-        console.log("🚀 ~ fetchDropdownOptions ~ merchantRes:", merchantRes);
+        // console.log("🚀 ~ fetchDropdownOptions ~ merchantRes:", merchantRes);
         const merchants = merchantRes.merchants;
-        console.log("🚀 ~ fetchDropdownOptions ~ merchants:", merchants);
+        // console.log("🚀 ~ fetchDropdownOptions ~ merchants:", merchants);
 
         const affiliateRes = await fetchAllAffiliates();
-        console.log("🚀 ~ fetchDropdownOptions ~ affiliateRes:", affiliateRes);
+        // console.log("🚀 ~ fetchDropdownOptions ~ affiliateRes:", affiliateRes);
 
         const accountRes = await fetchAllAccounts();
-        console.log("🚀 ~ fetchDropdownOptions ~ accountRes:", accountRes);
+        // console.log("🚀 ~ fetchDropdownOptions ~ accountRes:", accountRes);
 
         setMerchantOptions(merchants);
 
         // Filter only IsActive === true
         const activeAffiliates = affiliateRes.data.data.filter((affiliate: { IsActive: boolean }) => affiliate.IsActive);
         const activeAccounts = accountRes.data.data.filter((account: { IsActive: boolean }) => account.IsActive);
-        console.log("🚀 ~ fetchDropdownOptions ~ activeAffiliates:", activeAffiliates)
+        // console.log("🚀 ~ fetchDropdownOptions ~ activeAffiliates:", activeAffiliates)
 
         setAffiliateOptions(activeAffiliates);
         setAccountOptions(activeAccounts);

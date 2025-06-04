@@ -29,7 +29,7 @@ const StoreGroupForm: React.FC = () => {
         e.preventDefault();
         try {
             const response = await createStoreGroup(storeGroup);
-            console.log('Store Group Created:', response);
+            // console.log('Store Group Created:', response);
             // Clear the form after successful submission
             setStoreGroup({
                 Name: '',

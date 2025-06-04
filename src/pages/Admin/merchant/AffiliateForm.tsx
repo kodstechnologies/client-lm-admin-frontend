@@ -63,7 +63,7 @@ const AffiliateForm: React.FC = () => {
             const token = localStorage.getItem("authToken");
 
             const response = await createAffiliate(affiliate, token);
-            console.log('Affiliate Created:', response);
+            // console.log('Affiliate Created:', response);
             setAffiliate({
                 Name: '',
                 Phone: '',

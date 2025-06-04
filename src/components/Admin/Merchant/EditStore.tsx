@@ -98,7 +98,7 @@ const EditStore = () => {
           // Fetch store data
           const storeRes = await fetchStoreById(id)
           const store = storeRes.data?.data || storeRes
-          console.log("Fetched store data:", store) // Debug store data
+          // console.log("Fetched store data:", store) // Debug store data
 
           const baseUrl = `${VITE_BACKEND_LOCALHOST_API_URL.replace("/api", "")}/Uploads`
 
@@ -145,8 +145,8 @@ const EditStore = () => {
           const activeAffiliates = Array.isArray(affiliateData) ? affiliateData.filter((a) => a.IsActive === true) : []
           const activeAccounts = Array.isArray(accountData) ? accountData.filter((a) => a.IsActive === true) : []
 
-          console.log("Active affiliates:", activeAffiliates)
-          console.log("Active accounts:", activeAccounts)
+          // console.log("Active affiliates:", activeAffiliates)
+          // console.log("Active accounts:", activeAccounts)
 
           setAffiliateOptions(activeAffiliates)
           setAccountOptions(activeAccounts)

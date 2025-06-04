@@ -51,7 +51,7 @@ const EditAffiliate: React.FC = () => {
             const token = localStorage.getItem("authToken")
 
             await updateAffiliate(id!, affiliate, token);
-            console.log('affiliate updated');
+            // console.log('affiliate updated');
             setAffiliate({
                 Name: '',
                 Phone: '',
@@ -62,7 +62,7 @@ const EditAffiliate: React.FC = () => {
             navigate('/admin/merchant-affiliate'); // Redirect to the account list page after successful update
 
             // Use the update API to update the affiliate
-            console.log('Affiliate updated successfully');
+            // console.log('Affiliate updated successfully');
         } catch (error: any) {
             console.error('Error updating affiliate:', error.message);
         } finally {

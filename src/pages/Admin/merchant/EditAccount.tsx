@@ -55,7 +55,7 @@ const [loadingbtn, setLoadingbtn] = useState(false);
             const token = localStorage.getItem("authToken")
 
             await updateAccount(id!, account, token); // Update the account data using the update API
-            console.log('Account updated successfully');
+            // console.log('Account updated successfully');
             navigate('/admin/merchant-account'); // Redirect to the account list page after successful update
         } catch (error: any) {
             console.error('Error updating account:', error.message);

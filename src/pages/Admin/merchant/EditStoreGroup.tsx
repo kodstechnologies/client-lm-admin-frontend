@@ -44,7 +44,7 @@ const EditStoreGroup: React.FC = () => {
         e.preventDefault();
         try {
             await updateStoreGroup(id!, storeGroup);
-            console.log('Store group updated');
+            // console.log('Store group updated');
 
             //  Clear the form
             setStoreGroup({

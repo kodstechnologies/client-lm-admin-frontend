@@ -33,7 +33,7 @@ export const verifyOtp = async (payload: any) => {
     try {
         const response = await api.post('/otp-verification', payload);
         const token = response.data.token; //  get token
-        console.log("Received token:", token);
+        // console.log("Received token:", token);
         localStorage.setItem("authToken", response.data.token);
 
         return response.data;
@@ -169,7 +169,7 @@ export const createStoreGroup = async (payload: any) => {
 //create store by merchantid|| store by chain store
 export const createStoreByMerchantId = async (merchantId: string, payload: FormData, token: string | null) => {
     try {
-        console.log("🚀 ~ createStoreByMerchantId ~ token:", token)
+        // console.log("🚀 ~ createStoreByMerchantId ~ token:", token)
 
         const res = await api.post(`/merchants/${merchantId}/create-store`, payload, {
 
@@ -178,9 +178,9 @@ export const createStoreByMerchantId = async (merchantId: string, payload: FormD
                 'Authorization': `Bearer ${token}`, // Add this
             }
         });
-        console.log("🚀 ~ createStoreByMerchantId ~ token:", token)
+        // console.log("🚀 ~ createStoreByMerchantId ~ token:", token)
 
-        console.log("🚀 ~ createStoreByMerchantId ~ res:", res);
+        // console.log("🚀 ~ createStoreByMerchantId ~ res:", res);
 
         return res.data;
     } catch (error: any) {
@@ -199,7 +199,7 @@ export const createStoreByMerchantId = async (merchantId: string, payload: FormD
 export const fetchStoresByMerchantId = async (merchantId: string) => {
     try {
         const response = await api.get(`/get-stores-by-merchant/${merchantId}`);
-        console.log("🚀 ~ fetchStoresByMerchantId ~ response.data:", response.data)
+        // console.log("🚀 ~ fetchStoresByMerchantId ~ response.data:", response.data)
         return response.data;
     } catch (error: any) {
         console.error('API Error:', error.response?.data || error.message);
@@ -219,7 +219,7 @@ export const fetchAllStores = async () => {
 
 //create chain store
 export const createMerchantApi = async (payload: any, token: string | null) => {
-    console.log("🚀 ~ createMerchantApi ~ token:", token)
+    // console.log("🚀 ~ createMerchantApi ~ token:", token)
     try {
         const res = await api.post('/create-merchant', payload, {
 
@@ -364,7 +364,7 @@ export const updateStoreGroup = async (id: any, data: any) => {
 export const getDataStoreById = async (id: string) => {
     try {
         const response = await api.get(`/get-data-store-by-id/${id}`);
-        console.log("🚀 ~ getDataStoreById ~ response.data:", response.data)
+        // console.log("🚀 ~ getDataStoreById ~ response.data:", response.data)
         return response.data;
     } catch (error: any) {
         console.error('Error fetching store group by ID:', error.response?.data || error.message);
@@ -401,7 +401,7 @@ export const updateAffiliate = async (id: string, affiliateData: any, token: str
                 'Authorization': `Bearer ${token}`, // Add this
             }
         });
-        console.log("🚀 ~ updateAffiliate ~ token:", token)
+        // console.log("🚀 ~ updateAffiliate ~ token:", token)
 
         return response.data;
     } catch (error: any) {
@@ -417,7 +417,7 @@ export const updateAccount = async (id: string, accountData: any, token: string 
                 'Authorization': `Bearer ${token}`, // Add this
             }
         });
-        console.log("🚀 ~ updateAccount ~ token:", token)
+        // console.log("🚀 ~ updateAccount ~ token:", token)
         return response.data;
     } catch (error: any) {
         console.error('Error updating account:', error.response?.data || error.message);

@@ -38,7 +38,7 @@ const AccountForm: React.FC = () => {
             const token = localStorage.getItem("authToken");
 
             const response = await createAccount(account, token);
-            console.log('Account Created:', response);
+            // console.log('Account Created:', response);
             setAccount({
                 AccountName: '',
                 AccountNumber: '',

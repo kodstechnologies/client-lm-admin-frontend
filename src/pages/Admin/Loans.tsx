@@ -189,9 +189,9 @@ const Loans = () => {
           const lenderName = item.appliedCustomerRef?.lenderName ?? "";
 
           const createdAt = item.createdAt;
-          console.log("🚀 ~ fetchData ~ createdAt:", createdAt)
+          // console.log("🚀 ~ fetchData ~ createdAt:", createdAt)
           const updatedAt = item.updatedAt;
-          console.log("🚀 ~ fetchData ~ updatedAt:", updatedAt)
+          // console.log("🚀 ~ fetchData ~ updatedAt:", updatedAt)
 
           let offersTotal, maxLoanAmount, minMPR, maxMPR;
           try {

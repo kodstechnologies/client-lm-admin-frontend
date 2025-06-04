@@ -35,7 +35,7 @@ const StoreGroupListPage: React.FC = () => {
         const fetchData = async () => {
             try {
                 const res = await fetchAllADataStores();
-                console.log("🚀 ~ fetchData ~ res:", res)
+                // console.log("🚀 ~ fetchData ~ res:", res)
                 setStoreGroups(res.data.data);
             } catch (error) {
                 console.error('Failed to fetch store groups', error);
