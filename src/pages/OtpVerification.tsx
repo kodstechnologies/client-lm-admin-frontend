@@ -65,12 +65,16 @@ const OtpVerification = () => {
         try {
             const result = await resendOtp({ mobileNumber: phoneNumber });
             showMessage("Otp resent successfully");
-            // console.log("🚀 ~ onSubmit: ~ result:", result)
-        } catch (error) {
-            console.error("Login error:", error);
 
+            // Reset timer and disable the button again
+            setCountdown(60);
+            setResendEnabled(false);
+        } catch (error) {
+            console.error("Resend OTP error:", error);
+            showMessage("Failed to resend OTP", "error");
         }
-    }
+    };
+
     useEffect(() => {
         if (countdown > 0) {
             const timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
@@ -135,7 +139,7 @@ const OtpVerification = () => {
                             auth: true,
                         })
                     );
-                    
+
                     // showMessage("Logged in successfully");
                     // navigate("/merchant-admin/dashboard");
                     navigate("/");

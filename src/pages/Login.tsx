@@ -137,17 +137,17 @@ const Login = () => {
                                     </div>
                                     {formik.touched.password && formik.errors.password ? <div className="text-danger">{formik.errors.password}</div> : null}
                                 </div>
-                                <button
-                                    type="submit"
-                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                                    disabled={otpSent || isLoading}
-                                >
-                                    {isLoading ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        'Send OTP'
-                                    )}
-                                </button>
+    <button
+        type="submit"
+        className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+        disabled={otpSent || isLoading}
+    >
+        {isLoading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+            'Send OTP'
+        )}
+    </button>
 
 
                                 {/* <button
