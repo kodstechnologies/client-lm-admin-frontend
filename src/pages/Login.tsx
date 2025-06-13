@@ -18,6 +18,10 @@ interface FormValues {
 const Login = () => {
     const [countdown, setCountdown] = useState(60);
     const [resendEnabled, setResendEnabled] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -53,17 +57,14 @@ const Login = () => {
         enableReinitialize: true,
 
         onSubmit: async (values) => {
-            // console.log("🚀 ~ Login ~ values:", values)
-
+            setIsLoading(true); // Start loading
             try {
                 const result = await emailVerify({
                     email: values.email,
                     password: values.password,
                 });
-                // console.log("🚀 ~ onSubmit: ~ result:", result)
-                // console.log("🚀 ~ onSubmit: ~ phno:", result.phoneNumber)
 
-
+                setOtpSent(true); // Disable button
                 if (result && !result.error) {
                     dispatch(setUser({
                         userType: 'admin',
@@ -73,20 +74,19 @@ const Login = () => {
                         email: result.email,
                     }));
 
-                    // // Store email/phoneHint for use on OTP page
-                    // localStorage.setItem('phoneHint', result.phoneHint);
-                    // localStorage.setItem('email', result.email);
-
                     showMessage('OTP sent to registered mobile number');
-                    navigate('/otp-verification', { state: { phoneNumber: result.phoneNumber,email:result.email } });
+                    navigate('/otp-verification', { state: { phoneNumber: result.phoneNumber, email: result.email } });
                 } else {
                     showMessage(result.message || 'Authentication failed', 'error');
                 }
             } catch (error) {
                 showMessage('Unexpected error occurred', 'error');
                 console.error("Login error:", error);
+            } finally {
+                setIsLoading(false); // Stop loading
             }
-        },
+        }
+
     });
     return (
         <div>
@@ -137,9 +137,19 @@ const Login = () => {
                                     </div>
                                     {formik.touched.password && formik.errors.password ? <div className="text-danger">{formik.errors.password}</div> : null}
                                 </div>
-                                <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                                    Send OTP
+                                <button
+                                    type="submit"
+                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                    disabled={otpSent || isLoading}
+                                >
+                                    {isLoading ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        'Send OTP'
+                                    )}
                                 </button>
+
+
                                 {/* <button
                                     type="submit"
                                     className={`btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)] ${!resendEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}

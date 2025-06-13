@@ -2,7 +2,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useDispatch } from "react-redux"
-import { Link, useParams, useNavigate } from "react-router-dom"
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom"
 import { setPageTitle } from "../../../store/themeConfigSlice"
 import { Button, Switch, Select, TextInput, FileInput, Group, Text, ActionIcon, Box } from "@mantine/core"
 import { IconInfoCircle, IconFile, IconPhoto } from "@tabler/icons-react"
@@ -14,6 +14,11 @@ const VITE_BACKEND_LOCALHOST_API_URL = import.meta.env.VITE_BACKEND_API_URL
 const EditStore = () => {
   const dispatch = useDispatch()
   const { id } = useParams() //capture store ID from route param
+  // const { storeId } = useParams();
+  const location = useLocation();
+  const { storeBrand } = location.state || {};
+  // console.log("🚀 ~ EditStore ~ storeBrand:", storeBrand)
+
   useEffect(() => {
     dispatch(setPageTitle("Edit Store"))
   }, [dispatch])
@@ -65,6 +70,9 @@ const EditStore = () => {
     removeChequePhoto: false,
   })
 
+  const queryParams = new URLSearchParams(location.search);
+  const fromLink = queryParams.get('from') === 'link';
+  // console.log("🚀 ~ EditStore ~ fromLink:", fromLink)
   // After setting formData, find the selected affiliate and account names
   const [selectedAffiliateName, setSelectedAffiliateName] = useState<string>("")
   const [selectedAccountName, setSelectedAccountName] = useState<string>("")
@@ -73,6 +81,7 @@ const EditStore = () => {
 
   const [groupOptions, setGroupOptions] = useState<{ _id: string; GroupId: string }[]>([])
   const [affiliateOptions, setAffiliateOptions] = useState<{ _id: string; AffiliateId: string; Name?: string }[]>([])
+  const [fetchedstorBrand, setFetchedStoreBrand] = useState()
   const [accountOptions, setAccountOptions] = useState<
     { _id: string; AccountId: string; Name?: string; AccountName?: string }[]
   >([])
@@ -98,8 +107,8 @@ const EditStore = () => {
           // Fetch store data
           const storeRes = await fetchStoreById(id)
           const store = storeRes.data?.data || storeRes
-          // console.log("Fetched store data:", store) // Debug store data
-
+          // console.log("Fetched store data:", store.ChainStoreId.Name) // Debug store data
+          setFetchedStoreBrand(store.ChainStoreId.Name)
           const baseUrl = `${VITE_BACKEND_LOCALHOST_API_URL.replace("/api", "")}/Uploads`
 
           // Create URLs for files
@@ -342,7 +351,14 @@ const EditStore = () => {
       )} */}
 
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto mt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-16 lg:gap-52 mb-4">
+          <p className="font-bold text-sm">Store ID: {id}</p>
+          <p className="font-bold text-sm">Chain Store Name: {fetchedstorBrand}</p>
+        </div>
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 panel p-6">
+
           <TextInput
             label="Name"
             required
@@ -479,7 +495,7 @@ const EditStore = () => {
             {!formData.removeShopPhoto && (
               <FilePreview
                 file={formData.shopPhoto}
-                url={formData.shopPhotoUrl||''}
+                url={formData.shopPhotoUrl || ''}
                 fileType="shopPhoto"
                 label="Shop Photo"
               />
@@ -501,7 +517,7 @@ const EditStore = () => {
             {!formData.removeChequePhoto && (
               <FilePreview
                 file={formData.chequePhoto}
-                url={formData.chequePhotoUrl||''}
+                url={formData.chequePhotoUrl || ''}
                 fileType="chequePhoto"
                 label="Cancelled Cheque"
               />

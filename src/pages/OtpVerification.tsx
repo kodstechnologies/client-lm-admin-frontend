@@ -136,7 +136,7 @@ const OtpVerification = () => {
                         })
                     );
                     
-                    showMessage("Logged in successfully");
+                    // showMessage("Logged in successfully");
                     // navigate("/merchant-admin/dashboard");
                     navigate("/");
                 } else {

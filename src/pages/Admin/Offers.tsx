@@ -36,7 +36,7 @@ const Offers = () => {
 
   // Get the state passed from the previous page
   const state = location.state as LocationState
-  console.log("🚀 ~ Offers ~ state:", state)
+  // console.log("🚀 ~ Offers ~ state:", state)
 // console.log(state.);
 
   useEffect(() => {

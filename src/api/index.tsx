@@ -47,7 +47,16 @@ export const verifyOtp = async (payload: any) => {
 //fetch all details
 export const getAllDetails = async (search = '') => {
     try {
-        const response = await api.get(`/all-details?search=${encodeURIComponent(search)}`);
+        const token = localStorage.getItem("authToken");
+
+        const response = await api.get(`/all-details?search=${encodeURIComponent(search)}`, {
+
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`, // Add this
+            }
+        })
+            ;
         return response.data; // Return the actual data to the caller
     } catch (error) {
         console.error("Error fetching all details:", error);
@@ -68,6 +77,7 @@ export const getAllOffers = async (leadId: string) => {
 export const getSummary = async (leadId: string) => {
     try {
         const response = await api.get(`/get-summary/${leadId}`)
+        // console.log("🚀 ~ getSummary ~ response:", response)
         return response
     } catch (error) {
         console.error("Error fetching summary:", error);
@@ -450,3 +460,63 @@ export const uploadStore = async (formData: FormData, merchantId: string, token:
 //         throw error;
 //     }
 // };
+
+export const getAllOrders = async () => {
+    try {
+        const res = await api.get('/all-orders')
+        return res.data;
+    } catch (error: any) {
+        console.error('API Error:', error.response?.data || error.message);
+        throw error;
+    }
+}
+
+export const searchOrdersByPhoneNumber = async (phoneNumber: any) => {
+    try {
+        const res = await api.get('/search-orders-by-phone-number', {
+            params: { number: phoneNumber }
+        },)
+        return res.data;
+    } catch (error: any) {
+        console.error('API Error:', error.response?.data || error.message);
+        throw error;
+    }
+}
+
+export const getAllCustomers = async () => {
+    try {
+        const res = await api.get('/all-customers')
+        // console.log("🚀 ~ getAllCustomers ~ res:", res)
+        return res.data
+    } catch (error: any) {
+        console.error('API Error:', error.response?.data || error.message);
+        throw error;
+    }
+}
+export const searchCustomersByPhoneNumber = async (phoneNumber: any) => {
+    try {
+        const res = await api.get('/search-customers-by-phone', {
+            params: { mobileNumber: phoneNumber }
+        });
+        return res;
+    } catch (error: any) {
+        console.error('API Error:', error.response?.data || error.message);
+        throw error;
+    }
+}
+export const updateOrderById = async (orderId: string) => {
+    try {
+        // console.log("🚀 ~ updateOrderById ~ token:", token);
+
+        const res = await api.put(
+            `/update-order-by-id/${orderId}`,
+            { status: "Completed" },
+
+        );
+
+        return res;
+    } catch (error) {
+        console.error("error:", error);
+        throw error;
+    }
+};

@@ -1,103 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import DataTableComponentChainStore from '../../../components/common/DataTableComponentChainStore';
 import { fetchStoresByMerchantId, uploadStore } from '../../../api';
 import IconPlus from '../../../components/Icon/IconPlus';
 import IconFile from '../../../components/Icon/IconFolder';
 import { showMessage } from '../../../components/common/ShowMessage';
 
-const columns = [
-    {
-        accessor: 'serialNo',
-        title: 'SERIAL NO.',
-        sortable: false,
-        render: (row: any, index: number) => {
-            const pageSize = 10;
-            const currentPage = 1;
-            return <>{(currentPage - 1) * pageSize + index + 1}</>;
-        },
-    },
-    {
-        accessor: 'StoreCode',
-        title: 'STORE ID',
-        sortable: false,
 
-    },
-    { accessor: 'Name', title: 'STORE NAME', sortable: true },
 
-    { accessor: 'Address', title: 'ADDRESS', sortable: true },
-    {
-        accessor: 'pinCode',
-        title: 'PIN CODE',
-        sortable: true,
-    },
-    { accessor: 'Phone', title: 'PHONE', sortable: true },
-    { accessor: 'Email', title: 'EMAIL', sortable: true },
-    { accessor: 'State', title: 'BRANCH STATE', sortable: true },
-    { accessor: 'GSTIN', title: 'GSTIN', sortable: true },
-
-    // Render GroupId as hyperlink
-    {
-        accessor: 'ChainStoreId',
-        title: 'GroupId',
-        sortable: true,
-        // render: (row: any) => (
-        //     <Link to={`/admin/merchant-store-group`} className="text-blue-600">
-        //         {row.MerchantId}
-        //     </Link>
-        // ),
-
-    },
-
-    // Render AffiliateId as hyperlink
-    {
-        accessor: 'AffiliateId',
-        title: 'AffiliateId',
-        sortable: true,
-        render: (row: any) => (
-            <Link to={`/admin/edit-merchant-affiliate/${row.AffiliateId}`} className="text-blue-600 ">
-                {row.AffiliateId}
-            </Link>
-        ),
-    },
-
-    // Render AccountId as hyperlink
-    {
-        accessor: 'AccountId',
-        title: 'AccountId',
-        sortable: true,
-        render: (row: any) => (
-            <Link to={`/admin/edit-merchant-account/${row.AccountId}`} className="text-blue-600">
-                {row.AccountId}
-            </Link>
-        ),
-    },
-
-    {
-        accessor: 'action',
-        title: 'ACTION',
-        sortable: false,
-        render: (row: any) => (
-            <Link to={`/admin/merchants-store/edit/${row._id}`} className="btn btn-primary gap-2">
-                Edit
-            </Link>
-        ),
-    },
-    {
-        accessor: 'IsActive',
-        title: 'STATUS',
-        sortable: true,
-        render: (row: any) => (
-            <span
-                className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${row.IsActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}
-            >
-                <span className="w-2 h-2 rounded-full bg-current" />
-                {row.IsActive ? 'Active' : 'Inactive'}
-            </span>
-        ),
-    },
-];
 
 
 const StoreData = () => {
@@ -109,9 +19,105 @@ const StoreData = () => {
     const [pageSize, setPageSize] = useState(10);
     const [sortStatus, setSortStatus] = useState({ columnAccessor: 'Name', direction: 'asc' as const });
     const [selectedRecords, setSelectedRecords] = useState<any[]>([]);
-
+    const location = useLocation();
+    const { storeBrand } = location.state || {};
+    // console.log("🚀 ~ StoreData ~ storeBrand:", storeBrand)
     const PAGE_SIZES = [5, 10, 20, 50];
+    const columns = [
+        {
+            accessor: 'serialNo',
+            title: 'SERIAL NO.',
+            sortable: false,
+            render: (row: any, index: number) => {
+                const pageSize = 10;
+                const currentPage = 1;
+                return <>{(currentPage - 1) * pageSize + index + 1}</>;
+            },
+        },
+        {
+            accessor: 'StoreCode',
+            title: 'STORE ID',
+            sortable: false,
 
+        },
+        { accessor: 'Name', title: 'STORE NAME', sortable: true },
+
+        { accessor: 'Address', title: 'ADDRESS', sortable: true },
+        {
+            accessor: 'pinCode',
+            title: 'PIN CODE',
+            sortable: true,
+        },
+        { accessor: 'Phone', title: 'PHONE', sortable: true },
+        { accessor: 'Email', title: 'EMAIL', sortable: true },
+        { accessor: 'State', title: 'BRANCH STATE', sortable: true },
+        { accessor: 'GSTIN', title: 'GSTIN', sortable: true },
+
+        // Render GroupId as hyperlink
+        {
+            accessor: 'ChainStoreId',
+            title: 'GroupId',
+            sortable: true,
+            // render: (row: any) => (
+            //     <Link to={`/admin/merchant-store-group`} className="text-blue-600">
+            //         {row.MerchantId}
+            //     </Link>
+            // ),
+
+        },
+
+        // Render AffiliateId as hyperlink
+        {
+            accessor: 'AffiliateId',
+            title: 'AffiliateId',
+            sortable: true,
+            render: (row: any) => (
+                <Link to={`/admin/edit-merchant-affiliate/${row.AffiliateId}`} className="text-blue-600 ">
+                    {row.AffiliateId}
+                </Link>
+            ),
+        },
+
+        // Render AccountId as hyperlink
+        {
+            accessor: 'AccountId',
+            title: 'AccountId',
+            sortable: true,
+            render: (row: any) => (
+                <Link to={`/admin/edit-merchant-account/${row.AccountId}`} className="text-blue-600">
+                    {row.AccountId}
+                </Link>
+            ),
+        },
+        {
+            accessor: 'action',
+            title: 'ACTION',
+            sortable: false,
+            render: (row: any) => (
+                <Link
+                    to={`/admin/merchants-store/edit/${row._id}`}
+                    state={{ storeBrand }}
+                    className="btn btn-primary gap-2"
+                >
+                    Edit
+                </Link>
+            ),
+        },
+        {
+            accessor: 'IsActive',
+            title: 'STATUS',
+            sortable: true,
+            render: (row: any) => (
+                <span
+                    className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${row.IsActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                >
+                    <span className="w-2 h-2 rounded-full bg-current" />
+                    {row.IsActive ? 'Active' : 'Inactive'}
+                </span>
+            ),
+        },
+    ];
     const fetchStores = async () => {
         if (!id) return;
         try {

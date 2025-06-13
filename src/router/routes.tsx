@@ -40,6 +40,7 @@ const ERROR503 = lazy(() => import('../pages/Pages/Error503'));
 const Maintenence = lazy(() => import('../pages/Pages/Maintenence'));
 const About = lazy(() => import('../pages/About'));
 const Error = lazy(() => import('../components/Error'));
+import AllCustomers from '../pages/Admin/AllCustomers';
 
 
 const routes = [
@@ -214,6 +215,14 @@ const routes = [
         element: (
             <AdminProtected>
                 <Orders />
+            </AdminProtected>
+        ),
+    },
+    {
+        path: '/admin/customers',
+        element: (
+            <AdminProtected>
+                <AllCustomers />
             </AdminProtected>
         ),
     },

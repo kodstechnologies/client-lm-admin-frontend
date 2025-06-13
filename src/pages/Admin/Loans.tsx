@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchFilteredLoanDataByType, getAllDetails, getSummary } from "../../api/index";
-import DataTableComponent from "../../components/common/DataTableComponent";
+import { getAllDetails, getSummary } from "../../api/index";
 import DataTableComponentsAllDetails from "../../components/common/DataTableComponentsAllDetails";
 
 const businessRegistrationTypeMap: Record<number, string> = {
@@ -50,6 +49,100 @@ const Loans = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
+  const fetchLoanData = async () => {
+    try {
+      const response = await getAllDetails();
+      const rawData = response?.data;
+
+      if (!Array.isArray(rawData)) throw new Error("Invalid response");
+
+      const normalizedData: LoanRow[] = [];
+      for (const item of rawData) {
+        const leadId = item.leadId;
+        const loginCount = item.loginCountRef?.count ?? 0;
+        const lenderName = item.appliedCustomerRef?.lenderName ?? "";
+        const createdAt = item.createdAt;
+        const updatedAt = item.updatedAt;
+
+        let offersTotal, maxLoanAmount, minMPR, maxMPR;
+        try {
+          const summaryResponse = await getSummary(leadId);
+          const summary = summaryResponse?.data?.summary;
+          offersTotal = summary?.offersTotal;
+          maxLoanAmount = summary?.maxLoanAmount;
+          minMPR = summary?.minMPR;
+          maxMPR = summary?.maxMPR;
+        } catch (e) {
+          console.warn(`Failed to fetch summary for leadId: ${leadId}`);
+        }
+
+        if (item.personalLoanRef) {
+          normalizedData.push({
+            id: `${leadId}-personal`,
+            leadId,
+            loanType: "Personal Loan",
+            ...item.personalLoanRef,
+            loginCount,
+            lenderName,
+            createdAt,
+            updatedAt,
+            offersTotal,
+            maxLoanAmount,
+            minMPR,
+            maxMPR,
+          });
+        }
+
+        if (item.businessLoanRef) {
+          normalizedData.push({
+            id: `${leadId}-business`,
+            leadId,
+            loanType: "Business Loan",
+            ...item.businessLoanRef,
+            loginCount,
+            lenderName,
+            createdAt,
+            updatedAt,
+            offersTotal,
+            maxLoanAmount,
+            minMPR,
+            maxMPR,
+          });
+        }
+      }
+
+      const uniqueDataMap = new Map<string, LoanRow>();
+      normalizedData.forEach((item) => {
+        const key = `${item.leadId}-${item.loanType}`;
+        if (!uniqueDataMap.has(key)) {
+          uniqueDataMap.set(key, item);
+        }
+      });
+
+      const deduplicatedData = [...uniqueDataMap.values()];
+      if (deduplicatedData.length === 0) {
+        setNoRecordsFound(true);
+        setLoanData([]);
+      } else {
+        const dataWithSerialNo = deduplicatedData.map((row, index) => ({
+          ...row,
+          serialNo: index + 1,
+        }));
+        setLoanData(dataWithSerialNo);
+        setNoRecordsFound(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch loan data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLoanData();
+  }, [loanTypeFilter]);
+
   const handleViewOffers = (loan: LoanRow) => {
     navigate(`/admin/loans/${loan.serialNo}`, {
       state: {
@@ -76,33 +169,18 @@ const Loans = () => {
             </button>
             {isDropdownOpen && (
               <div className="absolute bg-white border rounded shadow-md mt-10 w-40 z-10">
-                <button
-                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${loanTypeFilter === "All" ? "bg-blue-100" : ""}`}
-                  onClick={() => {
-                    setLoanTypeFilter("All")
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  All
-                </button>
-                <button
-                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${loanTypeFilter === "Personal Loan" ? "bg-blue-100" : ""}`}
-                  onClick={() => {
-                    setLoanTypeFilter("Personal Loan")
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  Personal Loan
-                </button>
-                <button
-                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${loanTypeFilter === "Business Loan" ? "bg-blue-100" : ""}`}
-                  onClick={() => {
-                    setLoanTypeFilter("Business Loan")
-                    setIsDropdownOpen(false)
-                  }}
-                >
-                  Business Loan
-                </button>
+                {["All", "Personal Loan", "Business Loan"].map((type) => (
+                  <button
+                    key={type}
+                    className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${loanTypeFilter === type ? "bg-blue-100" : ""}`}
+                    onClick={() => {
+                      setLoanTypeFilter(type);
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    {type}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -134,153 +212,30 @@ const Loans = () => {
       {
         accessor: "createdAt",
         title: "Created At",
-        render: (row: LoanRow) => (row.createdAt ? new Date(row.createdAt).toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }) : "-")
+        render: (row: LoanRow) => (row.createdAt ? new Date(row.createdAt).toLocaleString("en-GB") : "-"),
       },
       {
         accessor: "updatedAt",
         title: "Updated At",
-        render: (row: LoanRow) => (row.updatedAt ?new Date(row.updatedAt).toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }): "-")
-
+        render: (row: LoanRow) => (row.updatedAt ? new Date(row.updatedAt).toLocaleString("en-GB") : "-"),
       },
       {
         accessor: "actions",
         title: "Actions",
         render: (row: LoanRow) => (
-
           <button onClick={() => handleViewOffers(row)} className="btn btn-primary gap-2">
             View Offers
           </button>
         ),
       },
     ],
-    [isDropdownOpen]
+    [loanTypeFilter, isDropdownOpen]
   );
 
-  useEffect(() => {
-
-    const fetchData = async () => {
-      try {
-        const response = await getAllDetails();
-        const rawData = response?.data;
-
-        if (!Array.isArray(rawData)) throw new Error("Invalid response");
-
-        const normalizedData: LoanRow[] = [];
-
-        for (const item of rawData) {
-          const leadId = item.leadId;
-          const loginCount = item.loginCountRef?.count ?? 0;
-          const lenderName = item.appliedCustomerRef?.lenderName ?? "";
-
-          const createdAt = item.createdAt;
-          // console.log("🚀 ~ fetchData ~ createdAt:", createdAt)
-          const updatedAt = item.updatedAt;
-          // console.log("🚀 ~ fetchData ~ updatedAt:", updatedAt)
-
-          let offersTotal, maxLoanAmount, minMPR, maxMPR;
-          try {
-            const summaryResponse = await getSummary(leadId);
-            const summary = summaryResponse?.data?.summary;
-            offersTotal = summary?.offersTotal;
-            maxLoanAmount = summary?.maxLoanAmount;
-            minMPR = summary?.minMPR;
-            maxMPR = summary?.maxMPR;
-          } catch (e) {
-            console.warn(`Failed to fetch summary for leadId: ${leadId}`);
-          }
-
-          if (item.personalLoanRef) {
-            normalizedData.push({
-              id: `${leadId}-personal`,
-              leadId,
-              loanType: "Personal Loan",
-              ...item.personalLoanRef,
-              loginCount,
-              lenderName,
-              createdAt,
-              updatedAt,
-              offersTotal,
-              maxLoanAmount,
-              minMPR,
-              maxMPR,
-            });
-          }
-
-          if (item.businessLoanRef) {
-            normalizedData.push({
-              id: `${leadId}-business`,
-              leadId,
-              loanType: "Business Loan",
-              ...item.businessLoanRef,
-              loginCount,
-              lenderName,
-              createdAt,
-              updatedAt,
-              offersTotal,
-              maxLoanAmount,
-              minMPR,
-              maxMPR,
-            });
-          }
-        }
-
-        const flatData = normalizedData.flat();
-        const uniqueMap = new Map<string, LoanRow>();
-
-        flatData.forEach((item) => {
-          const key = `${item.leadId}-${item.loanType}`;
-          if (!uniqueMap.has(key)) {
-            uniqueMap.set(key, item);
-          }
-        });
-
-        const deduplicatedData = [...uniqueMap.values()];
-
-        if (deduplicatedData.length === 0) {
-          setNoRecordsFound(true);
-          setLoanData([]);
-        } else {
-          const dataWithSerialNo = deduplicatedData.map((row, index) => ({
-            ...row,
-            serialNo: index + 1,
-          }));
-          setLoanData(dataWithSerialNo);
-          setNoRecordsFound(false);
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch loan data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    
-  }, [loanTypeFilter]);
-
-  const filteredLoanData =
-    loanTypeFilter === "All" ? loanData : loanData.filter((loan) => loan.loanType === loanTypeFilter);
+  const filteredLoanData = loanTypeFilter === "All" ? loanData : loanData.filter((loan) => loan.loanType === loanTypeFilter);
 
   return (
     <div>
-      {/* UI for breadcrumb & loading state remains unchanged */}
       <ul className="flex space-x-2 rtl:space-x-reverse">
         <li>
           <Link to="/" className="text-primary hover:underline">
@@ -297,11 +252,9 @@ const Loans = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : noRecordsFound ? (
-          <p className="text-red-500"></p>
+          <p className="text-red-500">No records found</p>
         ) : (
           <DataTableComponentsAllDetails data={filteredLoanData} columns={columns} />
-          // <p>hi</p>
-          
         )}
       </div>
     </div>

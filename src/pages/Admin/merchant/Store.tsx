@@ -35,8 +35,12 @@ const columns = [
         accessor: 'action',
         title: 'ACTION',
         sortable: false,
-        render: ({ merchantId }: { merchantId: string }) => (
-            <Link to={`/admin/merchants-store/${merchantId}`} className="btn btn-primary gap-2">
+        render: ({ merchantId, storeBrand }: { merchantId: string; storeBrand: string }) => (
+            <Link
+                to={`/admin/merchants-store/${merchantId}`}
+                state={{ storeBrand }}
+                className="btn btn-primary gap-2"
+            >
                 View
             </Link>
         ),
@@ -46,7 +50,7 @@ const columns = [
 
 const Store = () => {
     const dispatch = useDispatch();
-const [rowData, setRowData] = useState<any[]>([]);
+    const [rowData, setRowData] = useState<any[]>([]);
 
 
     useEffect(() => {

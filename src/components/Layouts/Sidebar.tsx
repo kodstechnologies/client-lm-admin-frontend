@@ -9,7 +9,11 @@ import { useState, useEffect } from 'react';
 import IconCaretsDown from '../Icon/IconCaretsDown';
 import IconCaretDown from '../Icon/IconCaretDown';
 import { RiMoneyRupeeCircleLine } from "react-icons/ri";
-import { FiBook, FiBox, FiCreditCard, FiDollarSign, FiFileText, FiGift, FiGrid, FiPlusSquare, FiSettings, FiShoppingBag, FiShoppingCart, FiSquare, FiUsers, FiVideo } from 'react-icons/fi';
+import { FiBook, FiBox, FiCreditCard, FiDollarSign, FiFileText, FiGift, FiGrid, FiPlusSquare, FiSettings, FiShoppingBag, FiShoppingCart, FiSquare, FiUser, FiUsers, FiVideo } from 'react-icons/fi';
+import { FaStore } from 'react-icons/fa';
+
+
+
 import Logo from '../../assets/logo/LittleLogo_01.png';
 
 const Sidebar = () => {
@@ -103,7 +107,7 @@ const Sidebar = () => {
                                                     <NavLink to="/admin/merchant-approval">{t('Approval Requests')}</NavLink>
                                                 </li> */}
 
-                                             
+
                                             </ul>
                                         </AnimateHeight>
                                     </li>
@@ -112,7 +116,7 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <button type="button" className={`${currentMenu === 'store' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('store')}>
                                             <div className="flex items-center gap-2">
-                                                <FiUsers className="text-xl" />
+                                                <FaStore className="text-xl" />
                                                 <span>{t('Store Management')}</span>
                                             </div>
                                             <div className={currentMenu !== 'store' ? 'rtl:rotate-90 -rotate-90' : ''}>
@@ -158,7 +162,15 @@ const Sidebar = () => {
                                         <NavLink to="/admin/orders" className="group">
                                             <div className="flex items-center gap-2">
                                                 <FiShoppingBag className="group-hover:!text-primary shrink-0" />
-                                                <span>{t('Orders & Compliance')}</span>
+                                                <span>{t('Orders')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink to="/admin/customers" className="group">
+                                            <div className="flex items-center gap-2">
+                                                <FiUser className="group-hover:!text-primary shrink-0" />
+                                                <span>{t('Customers')}</span>
                                             </div>
                                         </NavLink>
                                     </li>
