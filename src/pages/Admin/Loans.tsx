@@ -44,7 +44,11 @@ const Loans = () => {
   const [loanData, setLoanData] = useState<LoanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [loanTypeFilter, setLoanTypeFilter] = useState<"All" | "Personal Loan" | "Business Loan">("All");
+
+  const loanTypes = ["All", "Personal Loan", "Business Loan"] as const;
+  type LoanType = typeof loanTypes[number];
+  const [loanTypeFilter, setLoanTypeFilter] = useState<LoanType>("All");
+
   const [noRecordsFound, setNoRecordsFound] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -169,7 +173,7 @@ const Loans = () => {
             </button>
             {isDropdownOpen && (
               <div className="absolute bg-white border rounded shadow-md mt-10 w-40 z-10">
-                {["All", "Personal Loan", "Business Loan"].map((type) => (
+                {loanTypes.map((type) => (
                   <button
                     key={type}
                     className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${loanTypeFilter === type ? "bg-blue-100" : ""}`}

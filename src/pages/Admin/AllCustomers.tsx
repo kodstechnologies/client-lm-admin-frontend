@@ -350,10 +350,10 @@ const AllCustomers = () => {
 
     try {
       const response = await searchCustomersByPhoneNumber(phoneNumber)
-      console.log("🚀 ~ handleSearch ~ response:", response)
+      // console.log("🚀 ~ handleSearch ~ response:", response)
 
       // Safely handle the response and ensure it's always an array
-      const responseData = response?.data?.customers || response?.customers || response?.data || response || []
+      const responseData = response?.data?.customers ||  response?.data || response || []
       console.log("🚀 ~ handleSearch ~ responseData:", responseData)
       const searchResults = ensureArray(responseData)
 
