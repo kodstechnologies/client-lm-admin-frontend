@@ -289,7 +289,7 @@ const AllOrders = () => {
     // Initialize with proper types and default values
     const [allOrders, setAllOrders] = useState<OrderType[]>([])
     const [filteredOrders, setFilteredOrders] = useState<OrderType[]>([])
-    const [orders, setOrders] = useState<OrderType[]>([]) 
+    const [orders, setOrders] = useState<OrderType[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string | null>(null)
     const [completingOrders, setCompletingOrders] = useState<Set<string>>(new Set())
@@ -353,7 +353,7 @@ const AllOrders = () => {
             startDate.setDate(startDate.getDate() - 30)
 
             let filteredOrders = ordersArray.filter((order: OrderType) => {
-                const orderDate = new Date(order.createdAt)
+                const orderDate = new Date(order.updatedAt)
                 return orderDate >= startDate && orderDate <= endDate
             })
             // .sort((a: OrderType, b: OrderType) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -403,12 +403,21 @@ const AllOrders = () => {
             const responseData = response?.data || response || []
             const searchResults = ensureArray(responseData)
 
-            setOrders(searchResults)
-            setAllOrdersPhone(searchResults)
+            const now = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(now.getDate() - 30);
 
-            setTotalPages(1)
-            setTotalOrders(searchResults.length)
-            setCurrentPage(1)
+            const filteredResults = searchResults.filter((order) => {
+                const orderDate = new Date(order.updatedAt); // fallback to createdAt
+                return orderDate >= thirtyDaysAgo && orderDate <= now;
+            });
+
+            // Set filtered results
+            setOrders(filteredResults);
+            setAllOrdersPhone(filteredResults);
+            setTotalPages(1);
+            setTotalOrders(filteredResults.length);
+            setCurrentPage(1);
         } catch (err: any) {
             console.error("Search error:", err)
             // Set empty array on error
@@ -464,11 +473,11 @@ const AllOrders = () => {
                 }
 
                 const filtered = dataToFilter.filter((order) => {
-                    const orderDate = new Date(order.createdAt)
+                    const orderDate = new Date(order.updatedAt)
                     return orderDate >= startDate && orderDate <= endDate
                 })
 
-                const sorted = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                const sorted = filtered.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
                 // Store filtered data for pagination
                 setFilteredOrders(sorted)

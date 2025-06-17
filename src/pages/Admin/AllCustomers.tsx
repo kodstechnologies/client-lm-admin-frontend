@@ -303,10 +303,10 @@ const AllCustomers = () => {
 
       let filteredCustomers = customersArray
         .filter((customer: CustomerType) => {
-          const customerDate = new Date(customer.createdAt)
+          const customerDate = new Date(customer.updatedAt)
           return customerDate >= startDate && customerDate <= endDate
         })
-        .sort((a: CustomerType, b: CustomerType) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort((a: CustomerType, b: CustomerType) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
       console.log("search ", searchTerm)
       // Apply phone number search if present
@@ -353,14 +353,23 @@ const AllCustomers = () => {
       // console.log("🚀 ~ handleSearch ~ response:", response)
 
       // Safely handle the response and ensure it's always an array
-      const responseData = response?.data?.customers ||  response?.data || response || []
+      const responseData = response?.data?.customers || response?.data || response || []
       console.log("🚀 ~ handleSearch ~ responseData:", responseData)
       const searchResults = ensureArray(responseData)
 
-      setCustomers(searchResults)
-      setTotalPages(1)
-      setTotalCustomers(searchResults.length)
-      setCurrentPage(1)
+      const now = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+
+      const filteredResults = searchResults.filter((customer) => {
+        const updatedAt = new Date(customer.updatedAt); // fallback if needed
+        return updatedAt >= thirtyDaysAgo && updatedAt <= now;
+      });
+
+      setCustomers(filteredResults);
+      setTotalPages(1);
+      setTotalCustomers(filteredResults.length);
+      setCurrentPage(1);
     } catch (err: any) {
       console.error("Search error:", err)
       setCustomers([])
@@ -743,7 +752,7 @@ const AllCustomers = () => {
                       Status
                     </th>
                     <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">
-                      Created Date
+                      Date & Time
                     </th>
                   </tr>
                 </thead>

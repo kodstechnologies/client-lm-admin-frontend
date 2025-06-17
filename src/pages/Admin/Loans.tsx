@@ -53,95 +53,114 @@ const Loans = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
-  const fetchLoanData = async () => {
-    try {
-      const response = await getAllDetails();
-      const rawData = response?.data;
+const fetchLoanData = async () => {
+  try {
+    setLoading(true);
+    const response = await getAllDetails();
+    const rawData = response?.data;
 
-      if (!Array.isArray(rawData)) throw new Error("Invalid response");
+    if (!Array.isArray(rawData)) throw new Error("Invalid response");
 
-      const normalizedData: LoanRow[] = [];
-      for (const item of rawData) {
-        const leadId = item.leadId;
-        const loginCount = item.loginCountRef?.count ?? 0;
-        const lenderName = item.appliedCustomerRef?.lenderName ?? "";
-        const createdAt = item.createdAt;
-        const updatedAt = item.updatedAt;
+    const normalizedData: LoanRow[] = [];
 
-        let offersTotal, maxLoanAmount, minMPR, maxMPR;
-        try {
-          const summaryResponse = await getSummary(leadId);
-          const summary = summaryResponse?.data?.summary;
-          offersTotal = summary?.offersTotal;
-          maxLoanAmount = summary?.maxLoanAmount;
-          minMPR = summary?.minMPR;
-          maxMPR = summary?.maxMPR;
-        } catch (e) {
-          console.warn(`Failed to fetch summary for leadId: ${leadId}`);
-        }
+    // Prepare an array of promises for fetching summaries
+    const summaryPromises = rawData.map((item) =>
+      getSummary(item.leadId)
+        .then((summaryResponse) => ({
+          leadId: item.leadId,
+          summary: summaryResponse?.data?.summary,
+        }))
+        .catch(() => ({
+          leadId: item.leadId,
+          summary: null,
+        }))
+    );
 
-        if (item.personalLoanRef) {
-          normalizedData.push({
-            id: `${leadId}-personal`,
-            leadId,
-            loanType: "Personal Loan",
-            ...item.personalLoanRef,
-            loginCount,
-            lenderName,
-            createdAt,
-            updatedAt,
-            offersTotal,
-            maxLoanAmount,
-            minMPR,
-            maxMPR,
-          });
-        }
+    // Await all summaries in parallel
+    const summaryResults = await Promise.all(summaryPromises);
 
-        if (item.businessLoanRef) {
-          normalizedData.push({
-            id: `${leadId}-business`,
-            leadId,
-            loanType: "Business Loan",
-            ...item.businessLoanRef,
-            loginCount,
-            lenderName,
-            createdAt,
-            updatedAt,
-            offersTotal,
-            maxLoanAmount,
-            minMPR,
-            maxMPR,
-          });
-        }
+    const summaryMap = new Map<string, any>();
+    summaryResults.forEach(({ leadId, summary }) => {
+      summaryMap.set(leadId, summary);
+    });
+
+    for (const item of rawData) {
+      const leadId = item.leadId;
+      const loginCount = item.loginCountRef?.count ?? 0;
+      const lenderName = item.appliedCustomerRef?.lenderName ?? "";
+      const createdAt = item.createdAt;
+      const updatedAt = item.updatedAt;
+
+      const summary = summaryMap.get(leadId);
+      const offersTotal = summary?.offersTotal ?? "-";
+      const maxLoanAmount = summary?.maxLoanAmount ?? "-";
+      const minMPR = summary?.minMPR ?? "-";
+      const maxMPR = summary?.maxMPR ?? "-";
+
+      if (item.personalLoanRef) {
+        normalizedData.push({
+          id: `${leadId}-personal`,
+          leadId,
+          loanType: "Personal Loan",
+          ...item.personalLoanRef,
+          loginCount,
+          lenderName,
+          createdAt,
+          updatedAt,
+          offersTotal,
+          maxLoanAmount,
+          minMPR,
+          maxMPR,
+        });
       }
 
-      const uniqueDataMap = new Map<string, LoanRow>();
-      normalizedData.forEach((item) => {
-        const key = `${item.leadId}-${item.loanType}`;
-        if (!uniqueDataMap.has(key)) {
-          uniqueDataMap.set(key, item);
-        }
-      });
-
-      const deduplicatedData = [...uniqueDataMap.values()];
-      if (deduplicatedData.length === 0) {
-        setNoRecordsFound(true);
-        setLoanData([]);
-      } else {
-        const dataWithSerialNo = deduplicatedData.map((row, index) => ({
-          ...row,
-          serialNo: index + 1,
-        }));
-        setLoanData(dataWithSerialNo);
-        setNoRecordsFound(false);
+      if (item.businessLoanRef) {
+        normalizedData.push({
+          id: `${leadId}-business`,
+          leadId,
+          loanType: "Business Loan",
+          ...item.businessLoanRef,
+          loginCount,
+          lenderName,
+          createdAt,
+          updatedAt,
+          offersTotal,
+          maxLoanAmount,
+          minMPR,
+          maxMPR,
+        });
       }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch loan data");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // De-duplicate and assign serial numbers
+    const uniqueDataMap = new Map<string, LoanRow>();
+    normalizedData.forEach((item) => {
+      const key = `${item.leadId}-${item.loanType}`;
+      if (!uniqueDataMap.has(key)) {
+        uniqueDataMap.set(key, item);
+      }
+    });
+
+    const deduplicatedData = [...uniqueDataMap.values()];
+    if (deduplicatedData.length === 0) {
+      setNoRecordsFound(true);
+      setLoanData([]);
+    } else {
+      const dataWithSerialNo = deduplicatedData.map((row, index) => ({
+        ...row,
+        serialNo: index + 1,
+      }));
+      setLoanData(dataWithSerialNo);
+      setNoRecordsFound(false);
+    }
+  } catch (err) {
+    console.error(err);
+    setError("Failed to fetch loan data");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchLoanData();
