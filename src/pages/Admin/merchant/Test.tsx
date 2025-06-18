@@ -55,7 +55,7 @@ const Test: React.FC = () => {
     const handleSubmit = <T,>(label: string, data: T) => {
         console.log(`${label} Submitted:`, data);
     };
-
+//test push
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto mt-10">
             {/* Account Form */}

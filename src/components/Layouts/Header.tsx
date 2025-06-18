@@ -224,12 +224,12 @@ const Header = () => {
                                 offset={[0, 8]}
                                 placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
                                 btnClassName="relative group block"
-                                button={<img className="w-7 h-7 rounded-full object-cover saturate-50 group-hover:saturate-100" src="/assets/images/user.png" alt="userProfile" />}
+                                button={<img className="w-7 h-7 rounded-full object-cover saturate-50 group-hover:saturate-100" src="/assets/images/profile-787.png" alt="userProfile" />}
                             >
                                 <ul className="text-dark dark:text-white-dark !py-0 w-[230px] font-semibold dark:text-white-light/90">
                                     <li>
                                         <div className="flex items-center px-4 py-4">
-                                            <img className="rounded-md w-10 h-10 object-cover" src="/assets/images/user.png" alt="userProfile" />
+                                            <img className="rounded-md w-10 h-10 object-cover" src="/assets/images/profile-787.png" alt="userProfile" />
                                             <div className="ltr:pl-4 rtl:pr-4 truncate">
                                                 <h4 className="text-base">
                                                     Admin One
