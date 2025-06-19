@@ -8,7 +8,7 @@ const api = axios.create({
 
     }
 });
-
+//email verify
 
 export const emailVerify = async (payload: any) => {
     try {
