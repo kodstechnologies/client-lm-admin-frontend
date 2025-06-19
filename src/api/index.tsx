@@ -13,6 +13,8 @@ const api = axios.create({
 export const emailVerify = async (payload: any) => {
     try {
         const response = await api.post('/email-verification', payload)
+        console.log("🚀 ~ emailVerify ~ response:", response)
+        
         return response.data;
     } catch (error) {
         console.error("Error sending OTP:", error);
