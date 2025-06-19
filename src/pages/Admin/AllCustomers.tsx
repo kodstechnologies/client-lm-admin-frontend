@@ -1,15 +1,15 @@
 
+
 import React, { useState, useEffect, useRef } from "react"
 import { useDispatch } from "react-redux"
 import { setPageTitle } from "../../store/themeConfigSlice"
 import { IoIosArrowDropright, IoIosArrowDropdown, IoMdFunnel } from "react-icons/io"
-import { Loader2, CheckCircle2, User, Phone, MapPin, DollarSign, Building, Shield } from "lucide-react"
+import { Loader2, CheckCircle2, User, MapPin, DollarSign, Building, Shield } from "lucide-react"
 import type Flatpickr from "react-flatpickr"
 import FlatpickrReact from "react-flatpickr"
 import "flatpickr/dist/themes/material_blue.css"
 import { MdArrowBackIos, MdOutlineArrowForwardIos } from "react-icons/md"
-import { getAllCustomers, searchCustomersByPhoneNumber } from "../../api/index"
-import { Link } from "react-router-dom"
+import { getAllCustomers } from "../../api/index"
 
 interface CustomerType {
   _id?: string
@@ -133,9 +133,7 @@ const AccordionContent = ({ customer }: AccordionContentProps) => {
             <div>
               <span className="font-medium text-gray-600">Tenure:</span>
               <span className="ml-2">
-                {customer.tenure
-                  ? `${customer.tenure} ${customer.tenure === 1 ? "month" : "months"}`
-                  : "N/A"}
+                {customer.tenure ? `${customer.tenure} ${customer.tenure === 1 ? "month" : "months"}` : "N/A"}
               </span>
             </div>
             <div>
@@ -231,14 +229,6 @@ const AccordionContent = ({ customer }: AccordionContentProps) => {
           </pre>
         </div>
       )}
-
-      {/* Additional Data */}
-      {/* {customer.data && (
-        <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
-          <h5 className="font-medium text-gray-800 mb-2">Additional Data:</h5>
-          <pre className="text-xs text-gray-700 overflow-auto max-h-32">{JSON.stringify(customer.data, null, 2)}</pre>
-        </div>
-      )} */}
     </div>
   )
 }
@@ -279,8 +269,51 @@ const AllCustomers = () => {
     return [data]
   }
 
-  // Load customers with pagination
-  const loadCustomersWithPagination = async (page = 1, isInitialLoad = false, searchTerm = search) => {
+  // Apply all active filters to the data
+  const applyFilters = (
+    data: CustomerType[],
+    searchTerm: string = search,
+    dateFilter: Date[] = dateRange as Date[],
+  ) => {
+    let filtered = [...data]
+
+    // Apply date filter if active
+    if (dateFilter.length === 2) {
+      const startDate = new Date(dateFilter[0])
+      startDate.setHours(0, 0, 0, 0)
+      const endDate = new Date(dateFilter[1])
+      endDate.setHours(23, 59, 59, 999)
+
+      filtered = filtered.filter((customer) => {
+        const customerDate = new Date(customer.createdAt)
+        return customerDate >= startDate && customerDate <= endDate
+      })
+    }
+
+    // Apply search filter if active
+    if (searchTerm.trim() !== "") {
+      filtered = filtered.filter((customer) => customer.mobileNumber.includes(searchTerm.trim()))
+    }
+
+    return filtered.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  }
+
+  // Apply pagination to filtered data
+  const applyPagination = (data: CustomerType[], page = 1) => {
+    const totalFiltered = data.length
+    const calculatedTotalPages = Math.ceil(totalFiltered / customersPerPage)
+    const startIndex = (page - 1) * customersPerPage
+    const endIndex = startIndex + customersPerPage
+    const paginatedCustomers = data.slice(startIndex, endIndex)
+
+    setCustomers(paginatedCustomers)
+    setTotalPages(calculatedTotalPages)
+    setTotalCustomers(totalFiltered)
+    setCurrentPage(page)
+  }
+
+  // Load customers from API
+  const loadCustomersFromAPI = async (isInitialLoad = false) => {
     if (isInitialLoad) {
       setInitialLoading(true)
     } else {
@@ -290,50 +323,31 @@ const AllCustomers = () => {
 
     try {
       const response = await getAllCustomers()
-      console.log("🚀 ~ loadCustomersWithPagination ~ response:", response)
-
-      // Safely extract data and ensure it's an array
       const responseData = response?.data?.customers || response?.customers || response?.data || response || []
-      console.log("🚀 ~ loadCustomersWithPagination ~ responseData:", responseData)
       const customersArray = ensureArray(responseData)
 
+      // Filter to last 30 days
       const endDate = new Date()
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - 30)
 
-      let filteredCustomers = customersArray
-        .filter((customer: CustomerType) => {
-          const customerDate = new Date(customer.updatedAt)
-          return customerDate >= startDate && customerDate <= endDate
-        })
-        .sort((a: CustomerType, b: CustomerType) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      const last30DaysCustomers = customersArray.filter((customer: CustomerType) => {
+        const customerDate = new Date(customer.updatedAt)
+        return customerDate >= startDate && customerDate <= endDate
+      })
 
-      console.log("search ", searchTerm)
-      // Apply phone number search if present
-      if (searchTerm.trim() !== "") {
-        filteredCustomers = filteredCustomers.filter((customer: CustomerType) =>
-          customer.mobileNumber.includes(searchTerm.trim()),
-        )
-      }
+      setAllCustomers(last30DaysCustomers)
 
-      setAllCustomers(filteredCustomers)
-
-      // Apply pagination to filteredCustomers
-      const totalFilteredCustomers = filteredCustomers.length
-      const calculatedTotalPages = Math.ceil(totalFilteredCustomers / customersPerPage)
-      const startIndex = (page - 1) * customersPerPage
-      const endIndex = startIndex + customersPerPage
-      const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex)
-
-      setCustomers(paginatedCustomers)
-      setTotalPages(calculatedTotalPages)
-      setTotalCustomers(totalFilteredCustomers)
-      setCurrentPage(page)
+      // Apply current filters and pagination
+      const filtered = applyFilters(last30DaysCustomers)
+      setFilteredCustomers(filtered)
+      applyPagination(filtered, 1)
     } catch (err) {
       setError("Failed to load customers.")
       console.error("Load customers error:", err)
       setCustomers([])
       setAllCustomers([])
+      setFilteredCustomers([])
     } finally {
       if (isInitialLoad) {
         setInitialLoading(false)
@@ -343,141 +357,85 @@ const AllCustomers = () => {
     }
   }
 
-  const handleSearch = async (phoneNumber: string) => {
-    setSearchLoading(true)
-    setError(null)
-    setIsSearchMode(true)
+  // Handle search
+  const handleSearch = (searchTerm: string) => {
+    setSearch(searchTerm)
+    setIsSearchMode(searchTerm.trim() !== "")
 
-    try {
-      const response = await searchCustomersByPhoneNumber(phoneNumber)
-      // console.log("🚀 ~ handleSearch ~ response:", response)
-
-      // Safely handle the response and ensure it's always an array
-      const responseData = response?.data?.customers || response?.data || response || []
-      console.log("🚀 ~ handleSearch ~ responseData:", responseData)
-      const searchResults = ensureArray(responseData)
-
-      const now = new Date();
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-
-      const filteredResults = searchResults.filter((customer) => {
-        const updatedAt = new Date(customer.updatedAt); // fallback if needed
-        return updatedAt >= thirtyDaysAgo && updatedAt <= now;
-      });
-
-      setCustomers(filteredResults);
-      setTotalPages(1);
-      setTotalCustomers(filteredResults.length);
-      setCurrentPage(1);
-    } catch (err: any) {
-      console.error("Search error:", err)
-      setCustomers([])
-      setTotalPages(1)
-      setTotalCustomers(0)
-      setCurrentPage(1)
-    } finally {
-      setSearchLoading(false)
+    if (searchTerm.trim() === "") {
+      // If search is cleared, apply other filters
+      const filtered = applyFilters(allCustomers, "", dateRange as Date[])
+      setFilteredCustomers(filtered)
+      applyPagination(filtered, 1)
+    } else {
+      // Apply search along with other filters
+      const filtered = applyFilters(allCustomers, searchTerm, dateRange as Date[])
+      setFilteredCustomers(filtered)
+      applyPagination(filtered, 1)
     }
   }
 
-  const handleClearSearch = () => {
-    const search = ""
-    setSearch("")
-    setIsSearchMode(false)
-    setError(null)
-
-    if (!isDateFilterMode) {
-      loadCustomersWithPagination(1, false, search)
-    }
-  }
-
+  // Handle date filter
   const handleDateFilter = (selectedDates: Date[]) => {
+    setDateRange(selectedDates)
+    setIsDateFilterMode(selectedDates.length === 2)
+
     if (selectedDates.length === 2) {
       setDateFilterLoading(true)
-      setError(null)
-      setIsDateFilterMode(true)
-
-      const startDate = new Date(selectedDates[0])
-      startDate.setHours(0, 0, 0, 0)
-
-      const endDate = new Date(selectedDates[1])
-      endDate.setHours(23, 59, 59, 999)
 
       try {
-        let dataToFilter = allCustomers
-
-        if (isSearchMode) {
-          if (customers.length === 0) {
-            setCustomers([])
-            setTotalPages(1)
-            setTotalCustomers(0)
-            setCurrentPage(1)
-            setFilteredCustomers([])
-            setDateFilterLoading(false)
-            return
-          }
-          dataToFilter = customers
-        }
-
-        const filtered = dataToFilter.filter((customer) => {
-          const customerDate = new Date(customer.createdAt)
-          return customerDate >= startDate && customerDate <= endDate
-        })
-
-        const sorted = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-        setFilteredCustomers(sorted)
-
-        const totalFiltered = sorted.length
-        const calculatedTotalPages = Math.ceil(totalFiltered / customersPerPage)
-        const startIndex = 0
-        const endIndex = startIndex + customersPerPage
-        const paginated = sorted.slice(startIndex, endIndex)
-
-        setCustomers(paginated)
-        setTotalPages(calculatedTotalPages)
-        setTotalCustomers(totalFiltered)
-        setCurrentPage(1)
+        const filtered = applyFilters(allCustomers, search, selectedDates)
+        setFilteredCustomers(filtered)
+        applyPagination(filtered, 1)
       } catch (err) {
         console.error("Date filter error:", err)
         setError("Failed to filter customers by date.")
-        setCustomers([])
       } finally {
         setDateFilterLoading(false)
       }
+    } else {
+      // If date filter is cleared, apply other filters
+      const filtered = applyFilters(allCustomers, search, [])
+      setFilteredCustomers(filtered)
+      applyPagination(filtered, 1)
     }
   }
 
+  // Handle clear search
+  const handleClearSearch = () => {
+    handleSearch("")
+  }
+
+  // Handle clear date filter
   const handleClearDateFilter = () => {
     setDateRange([])
     setIsDateFilterMode(false)
-    setFilteredCustomers([])
     setError(null)
     if (flatpickrRef.current) {
       flatpickrRef.current.flatpickr.clear()
     }
-    loadCustomersWithPagination(1, false, search)
+
+    // Apply remaining filters
+    const filtered = applyFilters(allCustomers, search, [])
+    setFilteredCustomers(filtered)
+    applyPagination(filtered, 1)
   }
 
+  // Initial load
   useEffect(() => {
     if (!hasInitiallyLoaded) {
-      loadCustomersWithPagination(1, true, search)
+      loadCustomersFromAPI(true)
       setHasInitiallyLoaded(true)
     }
   }, [hasInitiallyLoaded])
 
+  // Handle search with debounce
   useEffect(() => {
     if (!hasInitiallyLoaded) return
 
     const timeoutId = setTimeout(() => {
-      if (search.trim()) {
-        handleSearch(search.trim())
-      } else if (isSearchMode) {
-        setIsSearchMode(false)
-        if (!isDateFilterMode) {
-          loadCustomersWithPagination(1)
-        }
+      if (search.trim() !== "") {
+        handleSearch(search)
       }
     }, 500)
 
@@ -500,7 +458,7 @@ const AllCustomers = () => {
   }
 
   const getStatusBadge = (status: string | undefined) => {
-    if (!status) return <span >N/A</span>
+    if (!status) return <span>N/A</span>
 
     let badgeClass = " "
     switch (status.toLowerCase()) {
@@ -544,19 +502,7 @@ const AllCustomers = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setExpandedRow(null)
-
-      if (!isSearchMode && !isDateFilterMode) {
-        loadCustomersWithPagination(page, false, search)
-      } else if (isDateFilterMode && filteredCustomers.length > 0) {
-        const startIndex = (page - 1) * customersPerPage
-        const endIndex = startIndex + customersPerPage
-        const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex)
-
-        setCustomers(paginatedCustomers)
-        setCurrentPage(page)
-      } else {
-        setCurrentPage(page)
-      }
+      applyPagination(filteredCustomers, page)
     }
   }
 
@@ -650,7 +596,6 @@ const AllCustomers = () => {
                 ref={flatpickrRef}
                 value={dateRange}
                 onChange={(selectedDates) => {
-                  setDateRange(selectedDates)
                   handleDateFilter(selectedDates)
                 }}
                 options={{
@@ -685,7 +630,7 @@ const AllCustomers = () => {
             <div className="text-sm text-gray-600">
               {searchLoading || dateFilterLoading
                 ? "Searching and filtering..."
-                : `Found ${customers.length} customer${customers.length !== 1 ? "s" : ""} for "${search}" in selected date range`}
+                : `Found ${totalCustomers} customer${totalCustomers !== 1 ? "s" : ""} for "${search}" in selected date range`}
             </div>
           )}
 
@@ -693,7 +638,7 @@ const AllCustomers = () => {
             <div className="text-sm text-gray-600">
               {searchLoading
                 ? "Searching..."
-                : `Found ${customers.length} customer${customers.length !== 1 ? "s" : ""} for "${search}"`}
+                : `Found ${totalCustomers} customer${totalCustomers !== 1 ? "s" : ""} for "${search}"`}
             </div>
           )}
 
@@ -701,7 +646,7 @@ const AllCustomers = () => {
             <div className="text-sm text-gray-600">
               {dateFilterLoading
                 ? "Filtering by date..."
-                : `Found ${customers.length} customer${customers.length !== 1 ? "s" : ""} in selected date range`}
+                : `Found ${totalCustomers} customer${totalCustomers !== 1 ? "s" : ""} in selected date range`}
             </div>
           )}
 
@@ -747,7 +692,6 @@ const AllCustomers = () => {
                     <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">
                       Store Id
                     </th>
-
                     <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">
                       Status
                     </th>
@@ -786,34 +730,31 @@ const AllCustomers = () => {
                               {formatCurrency(customer.income)}
                             </td>
                             <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">
-                              <td className="p-2 sm:p-3 text-xs sm:text-sm">
-                                {customer.storeId ? (
-                                  <a
-                                    href={`/admin/merchants-store/edit/${customer.storeId}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                                  >
-                                    {customer.storeId}
-                                  </a>
-                                ) : (
-                                  <span className="ml-2 font-mono text-xs">N/A</span>
-                                )}
-                              </td>
+                              {customer.storeId ? (
+                                <a
+                                  href={`/admin/merchants-store/edit/${customer.storeId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  {customer.storeId}
+                                </a>
+                              ) : (
+                                <span className="ml-2 font-mono text-xs">N/A</span>
+                              )}
                             </td>
                             <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm text-center">
                               <span
                                 className={`inline-block ${customer.status === "QR Generated"
-                                  ? "btn btn-outline-primary btn-sm rounded-full w-full"
-                                  : customer.status === "Completed"
-                                    ? "btn btn-outline-success btn-sm rounded-full w-full"
-                                    : ""
+                                    ? "btn btn-outline-primary btn-sm rounded-full w-full"
+                                    : customer.status === "Completed"
+                                      ? "btn btn-outline-success btn-sm rounded-full w-full"
+                                      : ""
                                   }`}
                               >
                                 {getStatusBadge(customer.status)}
                               </span>
                             </td>
-
                             <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">
                               {formatDateTime(customer.createdAt)}
                             </td>
@@ -860,8 +801,8 @@ const AllCustomers = () => {
                       type="button"
                       onClick={() => handlePageChange(pageNum)}
                       className={`px-3.5 py-2 rounded-full transition font-semibold ${currentPage === pageNum
-                        ? "bg-primary text-white"
-                        : "bg-white-light text-dark hover:text-white hover:bg-primary"
+                          ? "bg-primary text-white"
+                          : "bg-white-light text-dark hover:text-white hover:bg-primary"
                         }`}
                     >
                       {pageNum}
