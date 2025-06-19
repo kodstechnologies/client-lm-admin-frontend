@@ -63,7 +63,7 @@ const fetchLoanData = async () => {
 
     const normalizedData: LoanRow[] = [];
 
-    // Prepare an array of promises for fetching summaries
+    // Prepare an array of promises for fetching summaries ****
     const summaryPromises = rawData.map((item) =>
       getSummary(item.leadId)
         .then((summaryResponse) => ({
