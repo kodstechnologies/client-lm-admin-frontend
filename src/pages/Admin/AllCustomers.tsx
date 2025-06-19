@@ -10,7 +10,7 @@ import FlatpickrReact from "react-flatpickr"
 import "flatpickr/dist/themes/material_blue.css"
 import { MdArrowBackIos, MdOutlineArrowForwardIos } from "react-icons/md"
 import { getAllCustomers } from "../../api/index"
-
+//dummy push
 interface CustomerType {
   _id?: string
   mobileNumber: string
