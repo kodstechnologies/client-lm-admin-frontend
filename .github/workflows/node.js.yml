@@ -23,7 +23,9 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
 
-    - run: npm ci
+    - run: |
+        export NODE_OPTIONS="--max-old-space-size=3072"  # 3GB limit
+        npm ci
 
     - run: |
         touch .env
@@ -35,11 +37,15 @@ jobs:
         sudo chown -R $USER:$USER .
         sudo chmod -R u+rwX,go+rX .
 
-    - name: Build React frontend
-      run: npm run build
+    - run: |
+        export NODE_OPTIONS="--max-old-space-size=3072"  # 3072 MB = 3GB
+        npm run build
+
+    - name: Install serve locally
+      run: npm install serve --save-dev
 
     - name: Serve React build with PM2
       run: |
-        pm2 delete AdminFrontendServer || true
-        pm2 serve build --name AdminFrontendServer --watch
+        pm2 delete FrontendServer || true
+        pm2 start npx --name "FrontendServer" -- serve -s dist -l 8080
         pm2 save
