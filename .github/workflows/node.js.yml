@@ -1,0 +1,51 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - run: |
+        export NODE_OPTIONS="--max-old-space-size=3072"  # 3GB limit
+        npm ci
+
+    - run: |
+        touch .env
+        echo "${{ secrets.frontendenv }}" > .env
+
+    # 🛠️ Fix directory ownership before build to avoid EACCES
+    - name: Fix permissions before build
+      run: |
+        sudo chown -R $USER:$USER .
+        sudo chmod -R u+rwX,go+rX .
+
+    - run: |
+        export NODE_OPTIONS="--max-old-space-size=3072"  # 3072 MB = 3GB
+        npm run build
+
+    - name: Install serve locally
+      run: npm install serve --save-dev
+
+    - name: Serve React build with PM2
+      run: |
+        pm2 delete FrontendServer || true
+        pm2 start npx --name "FrontendServer" -- serve -s dist -l 8080
+        pm2 save
