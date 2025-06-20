@@ -323,6 +323,7 @@ const AllCustomers = () => {
 
     try {
       const response = await getAllCustomers()
+      // console.log("🚀 ~ loadCustomersFromAPI ~ response:", response)
       const responseData = response?.data?.customers || response?.customers || response?.data || response || []
       const customersArray = ensureArray(responseData)
 
@@ -756,7 +757,7 @@ const AllCustomers = () => {
                               </span>
                             </td>
                             <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">
-                              {formatDateTime(customer.createdAt)}
+                              {formatDateTime(customer.updatedAt)}
                             </td>
                           </tr>
 
