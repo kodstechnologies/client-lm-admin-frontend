@@ -149,6 +149,7 @@ const DataTableComponentsAllDetails = <T extends { id: string | number, leadId: 
 
                 try {
                     const response = await fetchFilteredLoanData(from, to, 'created');
+                    // console.log("🚀 ~ fetchData ~ response:", response)
                     // Safely access nested `data`
                     const rawData = response?.data;
 
