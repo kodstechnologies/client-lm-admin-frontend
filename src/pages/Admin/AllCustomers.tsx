@@ -10,7 +10,7 @@ import FlatpickrReact from "react-flatpickr"
 import "flatpickr/dist/themes/material_blue.css"
 import { MdArrowBackIos, MdOutlineArrowForwardIos } from "react-icons/md"
 import { getAllCustomers } from "../../api/index"
-//dummy push
+
 interface CustomerType {
   _id?: string
   mobileNumber: string
@@ -242,6 +242,7 @@ const AllCustomers = () => {
   const [search, setSearch] = useState<string>("")
   const [searchLoading, setSearchLoading] = useState<boolean>(false)
   const [isSearchMode, setIsSearchMode] = useState<boolean>(false)
+  const [isTypingIncomplete, setIsTypingIncomplete] = useState<boolean>(false)
   const [dateRange, setDateRange] = useState<Date[] | string[]>([])
   const [isDateFilterMode, setIsDateFilterMode] = useState<boolean>(false)
   const [dateFilterLoading, setDateFilterLoading] = useState<boolean>(false)
@@ -285,13 +286,13 @@ const AllCustomers = () => {
       endDate.setHours(23, 59, 59, 999)
 
       filtered = filtered.filter((customer) => {
-        const customerDate = new Date(customer.createdAt)
+        const customerDate = new Date(customer.updatedAt)
         return customerDate >= startDate && customerDate <= endDate
       })
     }
 
-    // Apply search filter if active
-    if (searchTerm.trim() !== "") {
+    // Apply search filter if active - ONLY for 10-digit numbers
+    if (searchTerm.trim() !== "" && searchTerm.trim().length === 10) {
       filtered = filtered.filter((customer) => customer.mobileNumber.includes(searchTerm.trim()))
     }
 
@@ -323,7 +324,6 @@ const AllCustomers = () => {
 
     try {
       const response = await getAllCustomers()
-      // console.log("🚀 ~ loadCustomersFromAPI ~ response:", response)
       const responseData = response?.data?.customers || response?.customers || response?.data || response || []
       const customersArray = ensureArray(responseData)
 
@@ -358,21 +358,36 @@ const AllCustomers = () => {
     }
   }
 
-  // Handle search
-  const handleSearch = (searchTerm: string) => {
-    setSearch(searchTerm)
-    setIsSearchMode(searchTerm.trim() !== "")
+  // Updated search handling function
+  const updateFiltersAndPagination = (searchTerm: string, dateFilter: Date[] = dateRange as Date[]) => {
+    const filtered = applyFilters(allCustomers, searchTerm, dateFilter)
+    setFilteredCustomers(filtered)
+    applyPagination(filtered, 1)
 
-    if (searchTerm.trim() === "") {
-      // If search is cleared, apply other filters
-      const filtered = applyFilters(allCustomers, "", dateRange as Date[])
-      setFilteredCustomers(filtered)
-      applyPagination(filtered, 1)
-    } else {
-      // Apply search along with other filters
-      const filtered = applyFilters(allCustomers, searchTerm, dateRange as Date[])
-      setFilteredCustomers(filtered)
-      applyPagination(filtered, 1)
+    // Update search mode state - only set to true for 10-digit numbers
+    setIsSearchMode(searchTerm.trim() !== "" && searchTerm.trim().length === 10)
+  }
+
+  // Handle search input change
+  const handleSearchInputChange = (value: string) => {
+    setSearch(value)
+
+    if (value.trim() === "") {
+      // Empty search - show all customers
+      setIsTypingIncomplete(false)
+      updateFiltersAndPagination("", dateRange as Date[])
+    } else if (value.trim().length < 10) {
+      // Incomplete search - show empty results
+      setIsTypingIncomplete(true)
+      setIsSearchMode(false)
+      setCustomers([])
+      setFilteredCustomers([])
+      setTotalCustomers(0)
+      setTotalPages(0)
+      setCurrentPage(1)
+    } else if (value.trim().length === 10) {
+      // Complete search - will be handled by debounced effect
+      setIsTypingIncomplete(false)
     }
   }
 
@@ -385,9 +400,7 @@ const AllCustomers = () => {
       setDateFilterLoading(true)
 
       try {
-        const filtered = applyFilters(allCustomers, search, selectedDates)
-        setFilteredCustomers(filtered)
-        applyPagination(filtered, 1)
+        updateFiltersAndPagination(search, selectedDates)
       } catch (err) {
         console.error("Date filter error:", err)
         setError("Failed to filter customers by date.")
@@ -396,15 +409,15 @@ const AllCustomers = () => {
       }
     } else {
       // If date filter is cleared, apply other filters
-      const filtered = applyFilters(allCustomers, search, [])
-      setFilteredCustomers(filtered)
-      applyPagination(filtered, 1)
+      updateFiltersAndPagination(search, [])
     }
   }
 
   // Handle clear search
   const handleClearSearch = () => {
-    handleSearch("")
+    setSearch("")
+    setIsTypingIncomplete(false)
+    updateFiltersAndPagination("", dateRange as Date[])
   }
 
   // Handle clear date filter
@@ -417,9 +430,7 @@ const AllCustomers = () => {
     }
 
     // Apply remaining filters
-    const filtered = applyFilters(allCustomers, search, [])
-    setFilteredCustomers(filtered)
-    applyPagination(filtered, 1)
+    updateFiltersAndPagination(search, [])
   }
 
   // Initial load
@@ -430,18 +441,21 @@ const AllCustomers = () => {
     }
   }, [hasInitiallyLoaded])
 
-  // Handle search with debounce
+  // Handle search with debounce - ONLY for 10-digit numbers
   useEffect(() => {
     if (!hasInitiallyLoaded) return
 
     const timeoutId = setTimeout(() => {
-      if (search.trim() !== "") {
-        handleSearch(search)
+      // Only apply search filter if search has exactly 10 digits
+      if (search.trim().length === 10) {
+        setSearchLoading(true)
+        updateFiltersAndPagination(search, dateRange as Date[])
+        setSearchLoading(false)
       }
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [search, hasInitiallyLoaded])
+  }, [search, hasInitiallyLoaded, allCustomers, dateRange])
 
   const toggleRow = (rowId: string) => {
     setExpandedRow(expandedRow === rowId ? null : rowId)
@@ -555,7 +569,7 @@ const AllCustomers = () => {
               onChange={(e) => {
                 const value = e.target.value
                 if (/^\d{0,10}$/.test(value)) {
-                  setSearch(value)
+                  handleSearchInputChange(value)
                 }
               }}
             />
@@ -627,6 +641,9 @@ const AllCustomers = () => {
 
         {/* Status Messages */}
         <div className="mt-2 space-y-1">
+          {/* Show "Found 0 customers" for incomplete typing */}
+          {isTypingIncomplete && <div className="text-sm text-gray-600">Found 0 customers for "{search}"</div>}
+
           {isSearchMode && isDateFilterMode && (
             <div className="text-sm text-gray-600">
               {searchLoading || dateFilterLoading
@@ -643,7 +660,7 @@ const AllCustomers = () => {
             </div>
           )}
 
-          {!isSearchMode && isDateFilterMode && (
+          {!isSearchMode && isDateFilterMode && !isTypingIncomplete && (
             <div className="text-sm text-gray-600">
               {dateFilterLoading
                 ? "Filtering by date..."
@@ -651,7 +668,7 @@ const AllCustomers = () => {
             </div>
           )}
 
-          {!isSearchMode && !isDateFilterMode && (
+          {!isSearchMode && !isDateFilterMode && !isTypingIncomplete && search.trim() === "" && (
             <div className="text-sm text-gray-600">
               Showing {customers.length} customers from page {currentPage} of {totalPages} (Total: {totalCustomers}{" "}
               customers from past 30 days)

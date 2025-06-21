@@ -1,4 +1,4 @@
-//all orders
+
 import React, { useState, useEffect, useRef } from "react"
 import { useDispatch } from "react-redux"
 import { setPageTitle } from "../../store/themeConfigSlice"
@@ -11,7 +11,7 @@ import "flatpickr/dist/themes/material_blue.css"
 import { MdArrowBackIos } from "react-icons/md"
 import { MdOutlineArrowForwardIos } from "react-icons/md"
 import { getAllOrders, updateOrderById } from "../../api/index"
-//test
+
 interface OrderType {
     id?: string
     orderId?: string
@@ -260,21 +260,22 @@ const AllOrders = () => {
         }
     }
 
-    // Handle search
-    const handleSearch = (searchTerm: string) => {
-        setSearch(searchTerm)
-        setIsSearchMode(searchTerm.trim() !== "")
+    // Updated search handling function
+    const updateFiltersAndPagination = (searchTerm: string, dateFilter: Date[] = dateRange as Date[]) => {
+        const filtered = applyFilters(allOrders, searchTerm, dateFilter)
+        setFilteredOrders(filtered)
+        applyPagination(filtered, 1)
 
-        if (searchTerm.trim() === "") {
-            // If search is cleared, apply other filters
-            const filtered = applyFilters(allOrders, "", dateRange as Date[])
-            setFilteredOrders(filtered)
-            applyPagination(filtered, 1)
-        } else {
-            // Apply search along with other filters
-            const filtered = applyFilters(allOrders, searchTerm, dateRange as Date[])
-            setFilteredOrders(filtered)
-            applyPagination(filtered, 1)
+        // Update search mode state
+        setIsSearchMode(searchTerm.trim() !== "")
+    }
+
+    // Handle search input change
+    const handleSearchInputChange = (value: string) => {
+        setSearch(value)
+        // Immediately update filters when search becomes empty
+        if (value.trim() === "") {
+            updateFiltersAndPagination("", dateRange as Date[])
         }
     }
 
@@ -287,9 +288,7 @@ const AllOrders = () => {
             setDateFilterLoading(true)
 
             try {
-                const filtered = applyFilters(allOrders, search, selectedDates)
-                setFilteredOrders(filtered)
-                applyPagination(filtered, 1)
+                updateFiltersAndPagination(search, selectedDates)
             } catch (err) {
                 console.error("Date filter error:", err)
                 setError("Failed to filter orders by date.")
@@ -298,15 +297,14 @@ const AllOrders = () => {
             }
         } else {
             // If date filter is cleared, apply other filters
-            const filtered = applyFilters(allOrders, search, [])
-            setFilteredOrders(filtered)
-            applyPagination(filtered, 1)
+            updateFiltersAndPagination(search, [])
         }
     }
 
     // Handle clear search
     const handleClearSearch = () => {
-        handleSearch("")
+        setSearch("")
+        updateFiltersAndPagination("", dateRange as Date[])
     }
 
     // Handle clear date filter
@@ -319,9 +317,7 @@ const AllOrders = () => {
         }
 
         // Apply remaining filters
-        const filtered = applyFilters(allOrders, search, [])
-        setFilteredOrders(filtered)
-        applyPagination(filtered, 1)
+        updateFiltersAndPagination(search, [])
     }
 
     // Initial load
@@ -332,18 +328,22 @@ const AllOrders = () => {
         }
     }, [hasInitiallyLoaded])
 
-    // Handle search with debounce
+    // Handle search with debounce - FIXED VERSION
     useEffect(() => {
         if (!hasInitiallyLoaded) return
 
         const timeoutId = setTimeout(() => {
+            // Only apply search filter if search has content
             if (search.trim() !== "") {
-                handleSearch(search)
+                setSearchLoading(true)
+                updateFiltersAndPagination(search, dateRange as Date[])
+                setSearchLoading(false)
             }
+            // If search is empty, filters are already updated in handleSearchInputChange
         }, 500)
 
         return () => clearTimeout(timeoutId)
-    }, [search, hasInitiallyLoaded])
+    }, [search, hasInitiallyLoaded, allOrders, dateRange])
 
     // Clear success message after 3 seconds
     useEffect(() => {
@@ -491,7 +491,7 @@ const AllOrders = () => {
                             onChange={(e) => {
                                 const value = e.target.value
                                 if (/^\d{0,10}$/.test(value)) {
-                                    setSearch(value)
+                                    handleSearchInputChange(value)
                                 }
                             }}
                         />
