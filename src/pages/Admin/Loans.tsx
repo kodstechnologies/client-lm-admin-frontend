@@ -13,7 +13,7 @@ const businessRegistrationTypeMap: Record<number, string> = {
   7: "Other",
   8: "No Business Proof",
 };
-
+//interface
 interface LoanRow {
   id: string;
   leadId: string;
